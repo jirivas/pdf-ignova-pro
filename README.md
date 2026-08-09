@@ -1,68 +1,40 @@
 # PDF Ignova Pro
 
-PDF Ignova Pro is a Windows desktop application for working with PDF documents through a simple, productivity-focused interface.
+PDF Ignova Pro is an Open Source Windows desktop application for professional PDF workflows through a simple, productivity-focused interface.
 
-## Project status
+## Current development release
 
-The project is being prepared for public Open Source distribution and reproducible Windows builds.
+**1.9.2** is the SignPath-ready reconstruction branch derived from the complete GPL source package embedded in the 1.9.1 installer.
 
-Current release candidate: **1.9.1**
-
-> Important: the source code that produces the Windows release must be placed in this repository before requesting SignPath Foundation signing. The existing prebuilt installer is not sufficient for origin verification.
+The 1.9.2 source passes the project smoke tests and changes the voluntary support reminder to **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
-
-PDF Ignova Pro is intended to provide common professional PDF workflows, including:
 
 - Opening and viewing PDF documents
 - Page organization and manipulation
 - Text and annotation tools
-- Search across document pages
+- Search across all document pages with previous/next navigation
 - Printing
 - Watermarks
 - PDF conversion workflows
 - OCR-related workflows where supported by the included Open Source components
 
-The exact list must match the public 1.9.1 source before the SignPath application is submitted.
-
 ## License
 
-This project is intended to be released under **GNU GPL-3.0-only**.
+The project's own code is distributed under **GNU GPL-3.0-or-later**. Third-party components keep their respective licenses.
 
-See `LICENSE` and `THIRD_PARTY_NOTICES.md`.
-
-Commercial sale of official builds is compatible with GPL, but the Open Source edition itself may not be placed under a separate proprietary/commercial dual license if the project is to use the free SignPath Foundation program.
-
-## Brand
-
-The source code license does not grant rights to use the **IGNOVA**, **PDF Ignova Pro**, logos, or related branding to imply that modified or third-party builds are official.
-
-See `TRADEMARK.md`.
-
-## Code signing policy
-
-See [Code signing policy](CODE_SIGNING_POLICY.md).
-
-## Privacy
-
-See [Privacy policy](PRIVACY.md).
-
-## Security
-
-See [Security policy](SECURITY.md).
+The source-code license does not grant permission to present modified or third-party builds as official IGNOVA releases. See `TRADEMARK.md`.
 
 ## Builds
 
-Official Windows binaries must be produced by the repository's GitHub Actions workflow from the corresponding public source revision.
+Official Windows binaries are intended to be produced from this public repository by GitHub Actions on GitHub-hosted Windows runners. The build installs dependencies from `package-lock.json`, executes the test suite and packages the x64 Electron application.
 
-The build pipeline is intentionally left in a safe placeholder state until the actual 1.9.1 source tree and build commands are added.
+The SignPath integration will be enabled after the public source tree and first GitHub Actions artifact have been verified.
 
-## Official releases
+## Code signing
 
-Official releases will be published from the project repository after:
+See `CODE_SIGNING_POLICY.md` and `docs/SIGNPATH_APPLICATION.md`.
 
-1. the source tree is complete;
-2. third-party licenses are audited;
-3. a GitHub-hosted Windows build reproduces the application;
-4. SignPath Foundation onboarding is approved;
-5. the release artifact is signed and verified.
+## Privacy and security
+
+See `PRIVACY.md` and `SECURITY.md`.
