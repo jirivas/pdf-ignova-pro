@@ -1,48 +1,45 @@
 # Code signing policy
 
-PDF Ignova Pro uses a controlled release process intended to ensure that official Windows binaries are built from the public source repository.
-
-Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
 ## Repository
 
-Repository URL:
-
 `https://github.com/jirivas/pdf-ignova-pro`
 
-## Roles
+## Team roles
 
-Until additional maintainers are added:
-
-- **Committer / author:** Project maintainer
-- **Reviewer:** Project maintainer
-- **Approver:** Project maintainer
-
-When more contributors obtain write access, list them explicitly here and require review of changes from non-committers.
+- **Committer / author:** `jirivas`
+- **Reviewer:** `jirivas`
+- **Approver:** `jirivas`
 
 All maintainers with repository or SignPath access must use multi-factor authentication.
 
 ## Release signing
 
-Official release binaries must:
+Official PDF Ignova Pro Windows releases must:
 
-1. be built by GitHub Actions using GitHub-hosted runners;
-2. originate from the public repository;
-3. use the release workflow committed to the repository;
-4. be manually approved for signing where required by SignPath Foundation;
-5. carry consistent product/version metadata;
-6. be verified after signing before publication.
+1. originate from this public repository;
+2. be built by GitHub Actions using GitHub-hosted runners;
+3. use build configuration and scripts stored in this repository;
+4. install dependencies from the committed lock file;
+5. run the repository test suite before packaging;
+6. be uploaded as a GitHub Actions artifact before submission to SignPath;
+7. require manual approval for release signing when required by SignPath Foundation;
+8. use consistent product name and version metadata;
+9. be verified after signing before publication.
 
-No locally compiled or manually modified executable may be published as a SignPath-signed official release.
+Locally compiled or manually modified executables must not be published as SignPath-signed official releases.
 
-## Privacy statement
+## Privacy policy
 
-This program will not transfer information to other networked systems unless specifically requested by the user or required by a clearly documented user-initiated feature.
+See [`PRIVACY.md`](PRIVACY.md).
 
-Any network-enabled function added later must be documented in `PRIVACY.md` before release.
+PDF Ignova Pro is intended to process PDF documents locally. This program will not transfer information to other networked systems unless specifically requested by the user or the person installing or operating it.
+
+## Support reminder
+
+The official build may display a voluntary support reminder after the first 30 days and thereafter at most once every 30 days. The program remains fully functional without a support license, and the support mechanism does not restrict rights granted by the GNU GPL.
 
 ## Scope
 
-The signing policy applies only to official PDF Ignova Pro artifacts built from this repository.
-
-Third-party upstream Open Source binaries may be included only when their licenses permit redistribution and their provenance is documented.
+This signing policy applies only to official PDF Ignova Pro artifacts produced from this repository. Third-party Open Source components may be included only when their licenses permit redistribution and their provenance is documented.
