@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout public source repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Extract committed 1.9.2 source archive
         shell: pwsh
@@ -30,7 +30,7 @@ jobs:
           }
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -68,7 +68,7 @@ jobs:
 
       - name: Upload unsigned artifact
         id: upload-unsigned-artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pdf-ignova-pro-1.9.2-windows-x64-unsigned
           path: PDF-Ignova-Pro-1.9.2-Windows-x64-unsigned.zip
