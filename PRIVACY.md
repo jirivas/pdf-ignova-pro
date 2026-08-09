@@ -8,22 +8,20 @@ The application must not transmit document contents, personal information, telem
 
 ## Network features
 
-Before the SignPath Foundation application is submitted, audit the 1.9.1 source and list every network call here.
+PDF files opened or edited in the desktop application are not transmitted merely by opening, viewing or modifying them.
 
-If the final source contains no network calls, state:
+Any network-enabled feature added to an official release must be documented here before release and must be clearly user initiated.
 
-> PDF Ignova Pro does not transfer information to other networked systems unless specifically requested by the user.
+## Support reminder
 
-## Licensing / support reminder
+The support reminder is local. Displaying the reminder does not itself transmit user information.
 
-If the application contains a support or contribution reminder, it must not transmit information merely because the reminder is shown.
-
-Any payment page must be opened only after an explicit user action.
+Any payment or support page must be opened only after an explicit user action.
 
 ## Documents
 
-User PDF files must remain local unless the user deliberately chooses an export, cloud, AI, OCR, or other external service that has been documented here.
+User PDF files remain local unless the user deliberately chooses a documented export, cloud, AI, OCR or other external service.
 
 ## Changes
 
-Material privacy changes must be documented before the corresponding release is published.
+Material privacy changes must be documented before the corresponding official release is published.
