@@ -3,6 +3,12 @@ name: Build Windows release
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+    paths:
+      - "PDF_Ignova_Pro_1.9.2_Codigo_Fuente_GPLv3.zip"
+      - ".github/workflows/build-windows.yml"
+  push:
     tags:
       - "v*"
 
@@ -14,34 +20,64 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout public source repository
         uses: actions/checkout@v4
+
+      - name: Extract committed 1.9.2 source archive
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path _src | Out-Null
+          Expand-Archive -LiteralPath "PDF_Ignova_Pro_1.9.2_Codigo_Fuente_GPLv3.zip" -DestinationPath _src -Force
+          if (-not (Test-Path "_src/PDF_Ignova_Pro_1.9.2_Source/package.json")) {
+            throw "package.json was not found in the committed source archive."
+          }
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
+          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.2_Source/package-lock.json
 
       - name: Install dependencies
+        working-directory: _src/PDF_Ignova_Pro_1.9.2_Source
         run: npm ci
 
-      - name: Run tests
+      - name: Run source and navigation tests
+        working-directory: _src/PDF_Ignova_Pro_1.9.2_Source
         run: npm test
 
       - name: Package Windows x64 application
+        working-directory: _src/PDF_Ignova_Pro_1.9.2_Source
         run: npm run package:windows
+
+      - name: Verify packaged application exists
+        shell: pwsh
+        run: |
+          $root = "_src/PDF_Ignova_Pro_1.9.2_Source/release"
+          $folder = Get-ChildItem $root -Directory | Select-Object -First 1
+          if (-not $folder) { throw "Packaged application folder not found." }
+          $exe = Join-Path $folder.FullName "PDF Ignova Pro.exe"
+          if (-not (Test-Path $exe)) { throw "PDF Ignova Pro.exe was not produced." }
+          Write-Host "Packaged executable: $exe"
+          Get-FileHash -Algorithm SHA256 $exe
 
       - name: Create unsigned artifact for SignPath
         shell: pwsh
         run: |
-          $folder = Get-ChildItem release -Directory | Select-Object -First 1
-          if (-not $folder) { throw "Packaged application folder not found." }
-          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath PDF-Ignova-Pro-Windows-x64-unsigned.zip -Force
+          $root = "_src/PDF_Ignova_Pro_1.9.2_Source/release"
+          $folder = Get-ChildItem $root -Directory | Select-Object -First 1
+          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath PDF-Ignova-Pro-1.9.2-Windows-x64-unsigned.zip -Force
 
       - name: Upload unsigned artifact
+        id: upload-unsigned-artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pdf-ignova-pro-windows-x64-unsigned
-          path: PDF-Ignova-Pro-Windows-x64-unsigned.zip
+          name: pdf-ignova-pro-1.9.2-windows-x64-unsigned
+          path: PDF-Ignova-Pro-1.9.2-Windows-x64-unsigned.zip
           if-no-files-found: error
+          retention-days: 30
+
+      # After SignPath Foundation approval, add the official
+      # signpath/github-action-submit-signing-request step here using
+      # the artifact-id output from upload-unsigned-artifact.
