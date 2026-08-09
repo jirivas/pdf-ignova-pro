@@ -1,0 +1,64 @@
+name: Comentarios versión de prueba
+about: Informa de errores o comportamiento mejorable en PDF Ignova Pro 1.9.2
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por probar PDF Ignova Pro. No adjuntes documentos confidenciales ni datos personales.
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Versión de Windows
+      options:
+        - Windows 11
+        - Windows 10
+        - Otra
+    validations:
+      required: true
+  - type: input
+    id: function
+    attributes:
+      label: Función que estabas utilizando
+      placeholder: Buscar, editar texto, imprimir, OCR, marca de agua...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir el problema
+      description: Describe los pasos de forma breve y ordenada.
+      placeholder: "1. Abrí un PDF...\n2. Pulsé...\n3. Ocurrió..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Qué esperabas que ocurriera
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Qué ocurrió realmente
+    validations:
+      required: true
+  - type: input
+    id: pdf
+    attributes:
+      label: Tipo y tamaño aproximado del PDF
+      placeholder: "Ej.: PDF escaneado, 180 páginas, 35 MB"
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frecuencia
+      options:
+        - Ocurre siempre
+        - Ocurre algunas veces
+        - Solo ocurrió una vez
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Observaciones adicionales
+      description: Puedes indicar lentitud, bloqueos, comportamiento visual o cualquier otro detalle útil.
