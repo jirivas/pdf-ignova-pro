@@ -2,11 +2,11 @@
 
 PDF Ignova Pro is an Open Source Windows desktop application for professional PDF workflows through a simple, productivity-focused interface.
 
-## Current development release
+## Current public release
 
-**1.9.2** is the SignPath-ready reconstruction branch derived from the complete GPL source package embedded in the 1.9.1 installer.
+**1.9.2** is the current public Open Source release and is available from GitHub Releases as a Windows x64 build produced by GitHub Actions.
 
-The 1.9.2 source passes the project smoke tests and changes the voluntary support reminder to **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.2 source passes the project smoke tests and uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 
@@ -27,13 +27,15 @@ The source-code license does not grant permission to present modified or third-p
 
 ## Builds
 
-Official Windows binaries are intended to be produced from this public repository by GitHub Actions on GitHub-hosted Windows runners. The build installs dependencies from `package-lock.json`, executes the test suite and packages the x64 Electron application.
+Official Windows binaries are produced from this public repository by GitHub Actions on GitHub-hosted Windows runners. The build installs dependencies from `package-lock.json`, executes the test suite and packages the x64 Electron application.
 
-The SignPath integration will be enabled after the public source tree and first GitHub Actions artifact have been verified.
+The current unsigned public build establishes the release format that will be submitted through SignPath once the project is approved by SignPath Foundation.
 
-## Code signing
+## Code signing policy
 
-See `CODE_SIGNING_POLICY.md` and `docs/SIGNPATH_APPLICATION.md`.
+See [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
+
+Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 
 ## Privacy and security
 
