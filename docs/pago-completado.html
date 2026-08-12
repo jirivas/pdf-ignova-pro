@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compra completada | PDF Ignova Pro</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">I</span><span><strong>PDF Ignova Pro</strong><small>by IGNOVA</small></span></a></header>
+  <main>
+    <section class="hero beta-hero">
+      <div class="hero-copy">
+        <div class="status">Compra completada</div>
+        <h1>Gracias por apoyar PDF Ignova Pro.</h1>
+        <p class="lead">Tu compra ayuda a mantener el desarrollo y la distribución oficial del proyecto.</p>
+        <div class="callout" id="license-box">
+          <strong>Tu clave de apoyo</strong>
+          <p id="license-value">La clave aparecerá también en el recibo enviado por el proveedor de pago.</p>
+          <button class="button secondary" id="copy-license" type="button" style="display:none">Copiar clave</button>
+        </div>
+        <div class="actions"><a class="button primary" href="descargar.html">Descargar PDF Ignova Pro</a><a class="button secondary" href="index.html">Volver al inicio</a></div>
+      </div>
+      <aside class="product-card">
+        <span class="eyebrow">ACTIVACIÓN</span>
+        <h2>Introduce la clave una sola vez.</h2>
+        <ul><li>Abre PDF Ignova Pro</li><li>Selecciona Introducir licencia</li><li>Pega la clave recibida</li><li>Completa la activación</li><li>El recordatorio mensual desaparecerá</li></ul>
+      </aside>
+    </section>
+  </main>
+  <footer><div><strong>PDF Ignova Pro</strong> · Compra completada</div></footer>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const license = params.get('license') || params.get('license_key');
+    const value = document.getElementById('license-value');
+    const button = document.getElementById('copy-license');
+    if (license) {
+      value.textContent = license;
+      value.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+      value.style.fontWeight = '800';
+      value.style.wordBreak = 'break-all';
+      button.style.display = 'inline-flex';
+      button.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(license);
+        button.textContent = 'Clave copiada';
+      });
+    }
+  </script>
+</body>
+</html>
