@@ -1,7 +1,8 @@
 window.PDFIGNOVA_PAYMENT = {
   provider: 'Lemon Squeezy',
   price: '12 €',
-  checkoutUrl: ''
+  checkoutUrl: 'https://ignova.lemonsqueezy.com/checkout/buy/d3f679a3-8249-452b-925c-8361a9298852',
+  mode: 'test'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,7 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   notices.forEach((notice) => {
     notice.textContent = config.checkoutUrl
-      ? 'Pago seguro disponible mediante Lemon Squeezy.'
+      ? (config.mode === 'test'
+          ? 'Checkout de Lemon Squeezy conectado en modo de prueba. No se realizan cobros reales.'
+          : 'Pago seguro disponible mediante Lemon Squeezy.')
       : 'El sistema de cobro está preparado. Falta conectar la URL final de checkout de Lemon Squeezy.';
   });
 });
