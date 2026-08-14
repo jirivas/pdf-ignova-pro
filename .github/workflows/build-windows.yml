@@ -6,11 +6,11 @@ on:
     branches:
       - main
     paths:
-      - "PDF_Ignova_Pro_1.9.2_Codigo_Fuente_GPLv3.zip"
+      - "PDF_Ignova_Pro_1.9.3_Codigo_Fuente_GPLv3.zip"
       - ".github/workflows/build-windows.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -20,12 +20,12 @@ jobs:
       - name: Checkout public source repository
         uses: actions/checkout@v6
 
-      - name: Extract committed 1.9.2 source archive
+      - name: Extract committed 1.9.3 source archive
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path _src | Out-Null
-          Expand-Archive -LiteralPath "PDF_Ignova_Pro_1.9.2_Codigo_Fuente_GPLv3.zip" -DestinationPath _src -Force
-          if (-not (Test-Path "_src/PDF_Ignova_Pro_1.9.2_Source/package.json")) {
+          Expand-Archive -LiteralPath "PDF_Ignova_Pro_1.9.3_Codigo_Fuente_GPLv3.zip" -DestinationPath _src -Force
+          if (-not (Test-Path "_src/PDF_Ignova_Pro_1.9.3_Source/package.json")) {
             throw "package.json was not found in the committed source archive."
           }
 
@@ -34,24 +34,24 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.2_Source/package-lock.json
+          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.3_Source/package-lock.json
 
       - name: Install dependencies
-        working-directory: _src/PDF_Ignova_Pro_1.9.2_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.3_Source
         run: npm ci
 
       - name: Run source and navigation tests
-        working-directory: _src/PDF_Ignova_Pro_1.9.2_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.3_Source
         run: npm test
 
       - name: Package Windows x64 application
-        working-directory: _src/PDF_Ignova_Pro_1.9.2_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.3_Source
         run: npm run package:windows
 
       - name: Verify packaged application exists
         shell: pwsh
         run: |
-          $root = "_src/PDF_Ignova_Pro_1.9.2_Source/release"
+          $root = "_src/PDF_Ignova_Pro_1.9.3_Source/release"
           $folder = Get-ChildItem $root -Directory | Select-Object -First 1
           if (-not $folder) { throw "Packaged application folder not found." }
           $exe = Join-Path $folder.FullName "PDF Ignova Pro.exe"
@@ -62,18 +62,47 @@ jobs:
       - name: Create unsigned artifact for SignPath
         shell: pwsh
         run: |
-          $root = "_src/PDF_Ignova_Pro_1.9.2_Source/release"
+          $root = "_src/PDF_Ignova_Pro_1.9.3_Source/release"
           $folder = Get-ChildItem $root -Directory | Select-Object -First 1
-          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath PDF-Ignova-Pro-1.9.2-Windows-x64-unsigned.zip -Force
+          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath PDF-Ignova-Pro-1.9.3-Windows-x64-unsigned.zip -Force
 
       - name: Upload unsigned artifact
         id: upload-unsigned-artifact
         uses: actions/upload-artifact@v7
         with:
-          name: pdf-ignova-pro-1.9.2-windows-x64-unsigned
-          path: PDF-Ignova-Pro-1.9.2-Windows-x64-unsigned.zip
+          name: pdf-ignova-pro-1.9.3-windows-x64-unsigned
+          path: PDF-Ignova-Pro-1.9.3-Windows-x64-unsigned.zip
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish GitHub release 1.9.3
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $asset = "PDF-Ignova-Pro-1.9.3-Windows-x64-unsigned.zip"
+          $tag = "v1.9.3"
+          $title = "PDF Ignova Pro 1.9.3"
+          $notes = @"
+          PDF Ignova Pro 1.9.3 para Windows x64.
+
+          Novedades principales:
+          - Interfaz en español, inglés, portugués, alemán y francés, con selector superior de banderas.
+          - Impresión y exportación PDF en papel A2 y A1.
+          - Sistema de licencia de apoyo existente conservado, sin bloqueo de funciones.
+          - Correcciones de impresión, OCR, conversión y gestión de archivos temporales.
+
+          Aplicación sin firma digital. Windows puede mostrar una advertencia de SmartScreen.
+          "@
+
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $asset --clobber --repo $env:GITHUB_REPOSITORY
+            gh release edit $tag --title $title --notes $notes --latest --repo $env:GITHUB_REPOSITORY
+          } else {
+            gh release create $tag $asset --target $env:GITHUB_SHA --title $title --notes $notes --latest --repo $env:GITHUB_REPOSITORY
+          }
 
       # After SignPath Foundation approval, add the official
       # signpath/github-action-submit-signing-request step here using

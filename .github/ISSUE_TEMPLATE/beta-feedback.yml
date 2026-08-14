@@ -1,6 +1,6 @@
 name: Comentarios versión de prueba
-description: Informa de errores o comportamiento mejorable en PDF Ignova Pro 1.9.2
-title: "[Beta 1.9.2] "
+description: Informa de errores o comportamiento mejorable en PDF Ignova Pro 1.9.3
+title: "[Beta 1.9.3] "
 body:
   - type: markdown
     attributes:

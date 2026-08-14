@@ -1,6 +1,6 @@
-# PDF Ignova Pro 1.9.2 — Programa de prueba
+# PDF Ignova Pro 1.9.3 — Programa de prueba
 
-La versión 1.9.2 se utiliza como compilación pública de prueba mientras se completa el proceso de firma digital mediante SignPath Foundation.
+La versión 1.9.3 se utiliza como compilación pública de prueba mientras se completa el proceso de firma digital mediante SignPath Foundation.
 
 ## Objetivo
 
