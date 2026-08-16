@@ -6,6 +6,9 @@ on:
       - ocr-installer-fix-195
     paths:
       - ".github/workflows/ocr-windows-diagnostic.yml"
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
