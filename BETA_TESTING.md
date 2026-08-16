@@ -1,6 +1,6 @@
-# PDF Ignova Pro 1.9.5 — Programa de prueba
+# PDF Ignova Pro 1.9.6 — Programa de prueba
 
-La versión 1.9.5 se utiliza como compilación pública de prueba mientras se completa el proceso de firma digital.
+La versión 1.9.6 se utiliza como compilación pública de prueba mientras se completa el proceso de firma digital.
 
 ## Objetivo
 

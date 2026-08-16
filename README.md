@@ -4,9 +4,9 @@ PDF Ignova Pro is an Open Source Windows desktop application for professional PD
 
 ## Current public release
 
-**1.9.5** is the current public Open Source test release and is available from GitHub Releases as a Windows x64 build produced by GitHub Actions.
+**1.9.6** is the current public Open Source test release and is available from GitHub Releases as a Windows x64 build produced by GitHub Actions.
 
-The 1.9.5 source passes the project smoke tests and a functional Windows OCR test and uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.6 source passes the project smoke tests and a functional Windows OCR test and uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 
@@ -25,7 +25,7 @@ The 1.9.5 source passes the project smoke tests and a functional Windows OCR tes
 
 ## Download
 
-Use the **Setup.exe installer** from the [1.9.5 release](https://github.com/jirivas/pdf-ignova-pro/releases/tag/v1.9.5). A portable ZIP is also available as a secondary option.
+Use the **Setup.exe installer** from the [1.9.6 release](https://github.com/jirivas/pdf-ignova-pro/releases/tag/v1.9.6). A portable ZIP is also available as a secondary option.
 
 ## License
 
