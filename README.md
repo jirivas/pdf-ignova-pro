@@ -4,9 +4,9 @@ PDF Ignova Pro is an Open Source Windows desktop application for professional PD
 
 ## Current public release
 
-**1.9.4** is the current public Open Source test release and is available from GitHub Releases as a Windows x64 build produced by GitHub Actions.
+**1.9.5** is the current public Open Source test release and is available from GitHub Releases as a Windows x64 build produced by GitHub Actions.
 
-The 1.9.4 source passes the project smoke tests and uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.5 source passes the project smoke tests and a functional Windows OCR test and uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 
@@ -21,6 +21,11 @@ The 1.9.4 source passes the project smoke tests and uses a voluntary support rem
 - Watermarks
 - PDF conversion workflows
 - OCR and Office conversion helpers correctly unpacked from Electron ASAR builds
+- Windows installer with Start menu/desktop shortcuts and standard uninstallation
+
+## Download
+
+Use the **Setup.exe installer** from the [1.9.5 release](https://github.com/jirivas/pdf-ignova-pro/releases/tag/v1.9.5). A portable ZIP is also available as a secondary option.
 
 ## License
 
@@ -30,7 +35,7 @@ The source-code license does not grant permission to present modified or third-p
 
 ## Builds
 
-Official Windows binaries are produced from this public repository by GitHub Actions on GitHub-hosted Windows runners. The build installs dependencies from `package-lock.json`, executes the test suite and packages the x64 Electron application.
+Official Windows binaries are produced from this public repository by GitHub Actions on GitHub-hosted Windows runners. The build installs dependencies from `package-lock.json`, executes the source tests, performs real OCR with Windows PowerShell 5.1, builds the x64 application, compiles the installer, and verifies both installation and uninstallation.
 
 The current public test build is **not digitally signed**. An application to the free SignPath Foundation program was reviewed but was not approved at this early stage because the project does not yet have enough independent public adoption/visibility. We intend to reapply after the project has accumulated verifiable community usage and participation.
 
