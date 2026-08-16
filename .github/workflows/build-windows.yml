@@ -2,11 +2,17 @@ name: Build Windows release
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "PDF_Ignova_Pro_1.9.5_Codigo_Fuente_GPLv3.zip"
+      - ".github/workflows/build-windows.yml"
   push:
     branches:
       - main
     paths:
-      - "PDF_Ignova_Pro_1.9.4_Codigo_Fuente_GPLv3.zip"
+      - "PDF_Ignova_Pro_1.9.5_Codigo_Fuente_GPLv3.zip"
       - ".github/workflows/build-windows.yml"
 
 permissions:
@@ -20,12 +26,12 @@ jobs:
       - name: Checkout public source repository
         uses: actions/checkout@v6
 
-      - name: Extract committed 1.9.4 source archive
+      - name: Extract committed 1.9.5 source archive
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path _src | Out-Null
-          Expand-Archive -LiteralPath "PDF_Ignova_Pro_1.9.4_Codigo_Fuente_GPLv3.zip" -DestinationPath _src -Force
-          if (-not (Test-Path "_src/PDF_Ignova_Pro_1.9.4_Source/package.json")) {
+          Expand-Archive -LiteralPath "PDF_Ignova_Pro_1.9.5_Codigo_Fuente_GPLv3.zip" -DestinationPath _src -Force
+          if (-not (Test-Path "_src/PDF_Ignova_Pro_1.9.5_Source/package.json")) {
             throw "package.json was not found in the committed source archive."
           }
 
@@ -34,87 +40,140 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.4_Source/package-lock.json
+          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.5_Source/package-lock.json
 
       - name: Install dependencies
-        working-directory: _src/PDF_Ignova_Pro_1.9.4_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.5_Source
         run: npm ci
 
-      - name: Run source and navigation tests
-        working-directory: _src/PDF_Ignova_Pro_1.9.4_Source
+      - name: Run source tests
+        working-directory: _src/PDF_Ignova_Pro_1.9.5_Source
         run: npm test
 
-      - name: Package Windows x64 application
-        working-directory: _src/PDF_Ignova_Pro_1.9.4_Source
-        run: npm run package:windows
-
-      - name: Verify packaged application exists
+      - name: Run functional OCR test with Windows PowerShell 5.1
+        working-directory: _src/PDF_Ignova_Pro_1.9.5_Source
         shell: pwsh
         run: |
-          $root = "_src/PDF_Ignova_Pro_1.9.4_Source/release"
+          Add-Type -AssemblyName System.Drawing
+          $bitmap = New-Object System.Drawing.Bitmap 1600,320
+          $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+          $graphics.Clear([System.Drawing.Color]::White)
+          $font = New-Object System.Drawing.Font("Arial", 64)
+          $graphics.DrawString("PRUEBA OCR PDF IGNOVA 195", $font, [System.Drawing.Brushes]::Black, 40, 90)
+          $imagePath = Join-Path $pwd "ocr-test.png"
+          $bitmap.Save($imagePath, [System.Drawing.Imaging.ImageFormat]::Png)
+          $graphics.Dispose()
+          $font.Dispose()
+          $bitmap.Dispose()
+          $output = & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File scripts\ocr-windows.ps1 -InputPath $imagePath
+          if ($LASTEXITCODE -ne 0) { throw "OCR process failed with code $LASTEXITCODE" }
+          $result = $output | ConvertFrom-Json
+          if (-not $result.lines -or $result.text -notmatch "OCR") {
+            throw "OCR did not recognise the functional test: $($result.text)"
+          }
+          Write-Host "Recognised text: $($result.text)"
+
+      - name: Package Windows x64 application
+        working-directory: _src/PDF_Ignova_Pro_1.9.5_Source
+        run: npm run package:windows
+
+      - name: Verify packaged application and helper scripts
+        shell: pwsh
+        run: |
+          $root = "_src/PDF_Ignova_Pro_1.9.5_Source/release"
           $folder = Get-ChildItem $root -Directory | Select-Object -First 1
           if (-not $folder) { throw "Packaged application folder not found." }
           $exe = Join-Path $folder.FullName "PDF Ignova Pro.exe"
           if (-not (Test-Path $exe)) { throw "PDF Ignova Pro.exe was not produced." }
           $helpers = Join-Path $folder.FullName "resources/app.asar.unpacked/scripts"
-          if (-not (Test-Path (Join-Path $helpers "ocr-windows.ps1"))) { throw "OCR helper was not unpacked from ASAR." }
-          if (-not (Test-Path (Join-Path $helpers "convert-office.ps1"))) { throw "Office conversion helper was not unpacked from ASAR." }
-          Write-Host "Packaged executable: $exe"
-          Get-FileHash -Algorithm SHA256 $exe
+          if (-not (Test-Path (Join-Path $helpers "ocr-windows.ps1"))) { throw "OCR helper was not unpacked." }
+          if (-not (Test-Path (Join-Path $helpers "convert-office.ps1"))) { throw "Office helper was not unpacked." }
 
-      - name: Create unsigned artifact for SignPath
+      - name: Compile Windows installer
+        working-directory: _src/PDF_Ignova_Pro_1.9.5_Source
         shell: pwsh
         run: |
-          $root = "_src/PDF_Ignova_Pro_1.9.4_Source/release"
-          $folder = Get-ChildItem $root -Directory | Select-Object -First 1
-          $asset = "PDF-Ignova-Pro-1.9.4-Windows-x64-unsigned.zip"
-          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath $asset -Force
-          $digest = (Get-FileHash -Algorithm SHA256 $asset).Hash.ToLowerInvariant()
-          "$digest  $asset" | Set-Content -Encoding ascii "$asset.sha256.txt"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+          }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup compiler was not found." }
+          & $iscc installer\PDF-Ignova-Pro.iss
+          if ($LASTEXITCODE -ne 0) { throw "Installer compilation failed." }
 
-      - name: Upload unsigned artifact
-        id: upload-unsigned-artifact
+      - name: Verify installation and uninstallation
+        shell: pwsh
+        run: |
+          $setup = Resolve-Path "_src/PDF_Ignova_Pro_1.9.5_Source/release-installer/PDF-Ignova-Pro-1.9.5-Setup-Windows-x64-unsigned.exe"
+          $installDir = Join-Path $env:RUNNER_TEMP "PDF-Ignova-Pro-test-install"
+          $process = Start-Process -FilePath $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/DIR=$installDir" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Installer returned $($process.ExitCode)." }
+          if (-not (Test-Path (Join-Path $installDir "PDF Ignova Pro.exe"))) { throw "Installed executable was not found." }
+          $uninstaller = Join-Path $installDir "unins000.exe"
+          if (-not (Test-Path $uninstaller)) { throw "Uninstaller was not created." }
+          $process = Start-Process -FilePath $uninstaller -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Uninstaller returned $($process.ExitCode)." }
+          Start-Sleep -Seconds 2
+          if (Test-Path (Join-Path $installDir "PDF Ignova Pro.exe")) { throw "The application was not removed." }
+
+      - name: Create release files
+        shell: pwsh
+        run: |
+          $source = "_src/PDF_Ignova_Pro_1.9.5_Source"
+          $folder = Get-ChildItem "$source/release" -Directory | Select-Object -First 1
+          $portable = "PDF-Ignova-Pro-1.9.5-Windows-x64-portable-unsigned.zip"
+          $setup = "PDF-Ignova-Pro-1.9.5-Setup-Windows-x64-unsigned.exe"
+          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath $portable -Force
+          Copy-Item "$source/release-installer/$setup" $setup -Force
+          foreach ($asset in @($setup, $portable)) {
+            $digest = (Get-FileHash -Algorithm SHA256 $asset).Hash.ToLowerInvariant()
+            "$digest  $asset" | Set-Content -Encoding ascii "$asset.sha256.txt"
+          }
+
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: pdf-ignova-pro-1.9.4-windows-x64-unsigned
+          name: pdf-ignova-pro-1.9.5-windows-x64-unsigned
           path: |
-            PDF-Ignova-Pro-1.9.4-Windows-x64-unsigned.zip
-            PDF-Ignova-Pro-1.9.4-Windows-x64-unsigned.zip.sha256.txt
+            PDF-Ignova-Pro-1.9.5-Setup-Windows-x64-unsigned.exe
+            PDF-Ignova-Pro-1.9.5-Setup-Windows-x64-unsigned.exe.sha256.txt
+            PDF-Ignova-Pro-1.9.5-Windows-x64-portable-unsigned.zip
+            PDF-Ignova-Pro-1.9.5-Windows-x64-portable-unsigned.zip.sha256.txt
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub release 1.9.4
-        if: github.ref == 'refs/heads/main'
+      - name: Publish GitHub release 1.9.5
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $asset = "PDF-Ignova-Pro-1.9.4-Windows-x64-unsigned.zip"
-          $checksum = "$asset.sha256.txt"
-          $tag = "v1.9.4"
-          $title = "PDF Ignova Pro 1.9.4"
+          $tag = "v1.9.5"
+          $title = "PDF Ignova Pro 1.9.5"
+          $assets = @(
+            "PDF-Ignova-Pro-1.9.5-Setup-Windows-x64-unsigned.exe",
+            "PDF-Ignova-Pro-1.9.5-Setup-Windows-x64-unsigned.exe.sha256.txt",
+            "PDF-Ignova-Pro-1.9.5-Windows-x64-portable-unsigned.zip",
+            "PDF-Ignova-Pro-1.9.5-Windows-x64-portable-unsigned.zip.sha256.txt"
+          )
           $notes = @"
-          PDF Ignova Pro 1.9.4 para Windows x64.
+          PDF Ignova Pro 1.9.5 para Windows 10/11 x64.
 
-          Novedades principales:
-          - Interfaz en español, inglés, portugués, alemán, francés, chino simplificado y malayo.
-          - OCR de una zona rectangular de la página, con revisión, copia e inserción del texto reconocido.
-          - Nuevo PDF A4 en blanco para construir documentos pegando, añadiendo o copiando páginas.
-          - Impresión y exportación PDF en papel A2 y A1.
-          - Sistema de licencia de apoyo existente conservado, sin bloqueo de funciones.
-          - Corrección del empaquetado de los scripts de OCR y conversión Office fuera de app.asar.
+          Descarga recomendada: el archivo Setup.exe. Instala accesos directos y añade la desinstalación normal desde Configuración > Aplicaciones. El ZIP portátil se mantiene como alternativa.
+
+          Correcciones:
+          - Reparado el OCR de página, OCR de ventana y OCR usado al exportar a Word/Excel.
+          - La causa era un tipo WinRT incorrecto al abrir la imagen.
+          - OCR verificado de forma funcional con Windows PowerShell 5.1.
+          - Instalación y desinstalación verificadas automáticamente.
+          - Se conservan los siete idiomas, PDF en blanco y tamaños A1/A2.
 
           Aplicación sin firma digital. Windows puede mostrar una advertencia de SmartScreen.
           "@
-
           gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $tag $asset $checksum --clobber --repo $env:GITHUB_REPOSITORY
+            gh release upload $tag $assets --clobber --repo $env:GITHUB_REPOSITORY
             gh release edit $tag --title $title --notes $notes --latest --repo $env:GITHUB_REPOSITORY
           } else {
-            gh release create $tag $asset $checksum --target $env:GITHUB_SHA --title $title --notes $notes --latest --repo $env:GITHUB_REPOSITORY
+            gh release create $tag $assets --target $env:GITHUB_SHA --title $title --notes $notes --latest --repo $env:GITHUB_REPOSITORY
           }
-
-      # After SignPath Foundation approval, add the official
-      # signpath/github-action-submit-signing-request step here using
-      # the artifact-id output from upload-unsigned-artifact.

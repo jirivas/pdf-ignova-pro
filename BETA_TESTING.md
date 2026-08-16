@@ -1,6 +1,6 @@
-# PDF Ignova Pro 1.9.4 — Programa de prueba
+# PDF Ignova Pro 1.9.5 — Programa de prueba
 
-La versión 1.9.4 se utiliza como compilación pública de prueba mientras se completa el proceso de firma digital.
+La versión 1.9.5 se utiliza como compilación pública de prueba mientras se completa el proceso de firma digital.
 
 ## Objetivo
 
@@ -23,7 +23,7 @@ Entre 5 y 10 usuarios que trabajen habitualmente con PDF en Windows 10/11 x64.
 9. Aplicar una marca de agua.
 10. Guardar una copia y volver a abrirla.
 11. Imprimir a impresora o PDF cuando esté disponible.
-12. Probar OCR y conversiones habituales.
+12. Probar OCR de página y OCR de ventana; la compilación ejecuta además una prueba OCR real en Windows.
 13. Repetir varias operaciones seguidas para comprobar estabilidad y consumo de recursos.
 
 ## Qué informar
