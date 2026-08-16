@@ -4,21 +4,23 @@ PDF Ignova Pro is an Open Source Windows desktop application for professional PD
 
 ## Current public release
 
-**1.9.3** is the current public Open Source test release and is available from GitHub Releases as a Windows x64 build produced by GitHub Actions.
+**1.9.4** is the current public Open Source test release and is available from GitHub Releases as a Windows x64 build produced by GitHub Actions.
 
-The 1.9.3 source passes the project smoke tests and uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.4 source passes the project smoke tests and uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 
 - Opening and viewing PDF documents
 - Page organization and manipulation
+- Creation of a new blank A4 PDF for building documents from pasted or added pages
 - Text and annotation tools
 - Search across all document pages with previous/next navigation
-- Interface languages: Spanish, English, Portuguese, German and French
+- Region OCR for recognising only a selected part of a page
+- Interface languages: Spanish, English, Portuguese, German, French, Simplified Chinese and Malay
 - Printing and PDF export with A4, A3, A2 and A1 paper sizes
 - Watermarks
 - PDF conversion workflows
-- OCR-related workflows where supported by the included Open Source components
+- OCR and Office conversion helpers correctly unpacked from Electron ASAR builds
 
 ## License
 

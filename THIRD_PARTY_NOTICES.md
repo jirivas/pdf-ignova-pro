@@ -1,6 +1,6 @@
 # Third-party components
 
-PDF Ignova Pro 1.9.3 uses Open Source components declared in the committed `package.json` / `package-lock.json` source package. Each component retains its own license.
+PDF Ignova Pro 1.9.4 uses Open Source components declared in the committed `package.json` / `package-lock.json` source package. Each component retains its own license.
 
 ## Direct application dependencies
 

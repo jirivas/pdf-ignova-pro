@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - "PDF_Ignova_Pro_1.9.3_Codigo_Fuente_GPLv3.zip"
+      - "PDF_Ignova_Pro_1.9.4_Codigo_Fuente_GPLv3.zip"
       - ".github/workflows/build-windows.yml"
 
 permissions:
@@ -20,12 +20,12 @@ jobs:
       - name: Checkout public source repository
         uses: actions/checkout@v6
 
-      - name: Extract committed 1.9.3 source archive
+      - name: Extract committed 1.9.4 source archive
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path _src | Out-Null
-          Expand-Archive -LiteralPath "PDF_Ignova_Pro_1.9.3_Codigo_Fuente_GPLv3.zip" -DestinationPath _src -Force
-          if (-not (Test-Path "_src/PDF_Ignova_Pro_1.9.3_Source/package.json")) {
+          Expand-Archive -LiteralPath "PDF_Ignova_Pro_1.9.4_Codigo_Fuente_GPLv3.zip" -DestinationPath _src -Force
+          if (-not (Test-Path "_src/PDF_Ignova_Pro_1.9.4_Source/package.json")) {
             throw "package.json was not found in the committed source archive."
           }
 
@@ -34,74 +34,85 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.3_Source/package-lock.json
+          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.4_Source/package-lock.json
 
       - name: Install dependencies
-        working-directory: _src/PDF_Ignova_Pro_1.9.3_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.4_Source
         run: npm ci
 
       - name: Run source and navigation tests
-        working-directory: _src/PDF_Ignova_Pro_1.9.3_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.4_Source
         run: npm test
 
       - name: Package Windows x64 application
-        working-directory: _src/PDF_Ignova_Pro_1.9.3_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.4_Source
         run: npm run package:windows
 
       - name: Verify packaged application exists
         shell: pwsh
         run: |
-          $root = "_src/PDF_Ignova_Pro_1.9.3_Source/release"
+          $root = "_src/PDF_Ignova_Pro_1.9.4_Source/release"
           $folder = Get-ChildItem $root -Directory | Select-Object -First 1
           if (-not $folder) { throw "Packaged application folder not found." }
           $exe = Join-Path $folder.FullName "PDF Ignova Pro.exe"
           if (-not (Test-Path $exe)) { throw "PDF Ignova Pro.exe was not produced." }
+          $helpers = Join-Path $folder.FullName "resources/app.asar.unpacked/scripts"
+          if (-not (Test-Path (Join-Path $helpers "ocr-windows.ps1"))) { throw "OCR helper was not unpacked from ASAR." }
+          if (-not (Test-Path (Join-Path $helpers "convert-office.ps1"))) { throw "Office conversion helper was not unpacked from ASAR." }
           Write-Host "Packaged executable: $exe"
           Get-FileHash -Algorithm SHA256 $exe
 
       - name: Create unsigned artifact for SignPath
         shell: pwsh
         run: |
-          $root = "_src/PDF_Ignova_Pro_1.9.3_Source/release"
+          $root = "_src/PDF_Ignova_Pro_1.9.4_Source/release"
           $folder = Get-ChildItem $root -Directory | Select-Object -First 1
-          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath PDF-Ignova-Pro-1.9.3-Windows-x64-unsigned.zip -Force
+          $asset = "PDF-Ignova-Pro-1.9.4-Windows-x64-unsigned.zip"
+          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath $asset -Force
+          $digest = (Get-FileHash -Algorithm SHA256 $asset).Hash.ToLowerInvariant()
+          "$digest  $asset" | Set-Content -Encoding ascii "$asset.sha256.txt"
 
       - name: Upload unsigned artifact
         id: upload-unsigned-artifact
         uses: actions/upload-artifact@v7
         with:
-          name: pdf-ignova-pro-1.9.3-windows-x64-unsigned
-          path: PDF-Ignova-Pro-1.9.3-Windows-x64-unsigned.zip
+          name: pdf-ignova-pro-1.9.4-windows-x64-unsigned
+          path: |
+            PDF-Ignova-Pro-1.9.4-Windows-x64-unsigned.zip
+            PDF-Ignova-Pro-1.9.4-Windows-x64-unsigned.zip.sha256.txt
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub release 1.9.3
+      - name: Publish GitHub release 1.9.4
         if: github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $asset = "PDF-Ignova-Pro-1.9.3-Windows-x64-unsigned.zip"
-          $tag = "v1.9.3"
-          $title = "PDF Ignova Pro 1.9.3"
+          $asset = "PDF-Ignova-Pro-1.9.4-Windows-x64-unsigned.zip"
+          $checksum = "$asset.sha256.txt"
+          $tag = "v1.9.4"
+          $title = "PDF Ignova Pro 1.9.4"
           $notes = @"
-          PDF Ignova Pro 1.9.3 para Windows x64.
+          PDF Ignova Pro 1.9.4 para Windows x64.
 
           Novedades principales:
-          - Interfaz en español, inglés, portugués, alemán y francés, con selector superior de banderas.
+          - Interfaz en español, inglés, portugués, alemán, francés, chino simplificado y malayo.
+          - OCR de una zona rectangular de la página, con revisión, copia e inserción del texto reconocido.
+          - Nuevo PDF A4 en blanco para construir documentos pegando, añadiendo o copiando páginas.
           - Impresión y exportación PDF en papel A2 y A1.
           - Sistema de licencia de apoyo existente conservado, sin bloqueo de funciones.
-          - Correcciones de impresión, OCR, conversión y gestión de archivos temporales.
+          - Corrección del empaquetado de los scripts de OCR y conversión Office fuera de app.asar.
 
           Aplicación sin firma digital. Windows puede mostrar una advertencia de SmartScreen.
           "@
 
           gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $tag $asset --clobber --repo $env:GITHUB_REPOSITORY
+            gh release upload $tag $asset $checksum --clobber --repo $env:GITHUB_REPOSITORY
             gh release edit $tag --title $title --notes $notes --latest --repo $env:GITHUB_REPOSITORY
           } else {
-            gh release create $tag $asset --target $env:GITHUB_SHA --title $title --notes $notes --latest --repo $env:GITHUB_REPOSITORY
+            gh release create $tag $asset $checksum --target $env:GITHUB_SHA --title $title --notes $notes --latest --repo $env:GITHUB_REPOSITORY
           }
 
       # After SignPath Foundation approval, add the official
