@@ -6,13 +6,13 @@ on:
     branches:
       - main
     paths:
-      - "PDF_Ignova_Pro_1.9.6_Codigo_Fuente_GPLv3.zip"
+      - "PDF_Ignova_Pro_1.9.7_Codigo_Fuente_GPLv3.zip"
       - ".github/workflows/build-windows.yml"
   push:
     branches:
       - main
     paths:
-      - "PDF_Ignova_Pro_1.9.6_Codigo_Fuente_GPLv3.zip"
+      - "PDF_Ignova_Pro_1.9.7_Codigo_Fuente_GPLv3.zip"
       - ".github/workflows/build-windows.yml"
 
 permissions:
@@ -26,12 +26,12 @@ jobs:
       - name: Checkout public source repository
         uses: actions/checkout@v6
 
-      - name: Extract committed 1.9.6 source archive
+      - name: Extract committed 1.9.7 source archive
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path _src | Out-Null
-          Expand-Archive -LiteralPath "PDF_Ignova_Pro_1.9.6_Codigo_Fuente_GPLv3.zip" -DestinationPath _src -Force
-          if (-not (Test-Path "_src/PDF_Ignova_Pro_1.9.6_Source/package.json")) {
+          Expand-Archive -LiteralPath "PDF_Ignova_Pro_1.9.7_Codigo_Fuente_GPLv3.zip" -DestinationPath _src -Force
+          if (-not (Test-Path "_src/PDF_Ignova_Pro_1.9.7_Source/package.json")) {
             throw "package.json was not found in the committed source archive."
           }
 
@@ -40,18 +40,18 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.6_Source/package-lock.json
+          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.7_Source/package-lock.json
 
       - name: Install dependencies
-        working-directory: _src/PDF_Ignova_Pro_1.9.6_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.7_Source
         run: npm ci
 
       - name: Run source tests
-        working-directory: _src/PDF_Ignova_Pro_1.9.6_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.7_Source
         run: npm test
 
       - name: Run functional OCR test with Windows PowerShell 5.1
-        working-directory: _src/PDF_Ignova_Pro_1.9.6_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.7_Source
         shell: pwsh
         run: |
           Add-Type -AssemblyName System.Drawing
@@ -59,7 +59,7 @@ jobs:
           $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
           $graphics.Clear([System.Drawing.Color]::White)
           $font = New-Object System.Drawing.Font("Arial", 64)
-          $graphics.DrawString("PRUEBA OCR PDF IGNOVA 196", $font, [System.Drawing.Brushes]::Black, 40, 90)
+          $graphics.DrawString("PRUEBA OCR PDF IGNOVA 197", $font, [System.Drawing.Brushes]::Black, 40, 90)
           $imagePath = Join-Path $pwd "ocr-test.png"
           $bitmap.Save($imagePath, [System.Drawing.Imaging.ImageFormat]::Png)
           $graphics.Dispose()
@@ -74,13 +74,13 @@ jobs:
           Write-Host "Recognised text: $($result.text)"
 
       - name: Package Windows x64 application
-        working-directory: _src/PDF_Ignova_Pro_1.9.6_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.7_Source
         run: npm run package:windows
 
       - name: Verify packaged application and helper scripts
         shell: pwsh
         run: |
-          $root = "_src/PDF_Ignova_Pro_1.9.6_Source/release"
+          $root = "_src/PDF_Ignova_Pro_1.9.7_Source/release"
           $folder = Get-ChildItem $root -Directory | Select-Object -First 1
           if (-not $folder) { throw "Packaged application folder not found." }
           $exe = Join-Path $folder.FullName "PDF Ignova Pro.exe"
@@ -90,7 +90,7 @@ jobs:
           if (-not (Test-Path (Join-Path $helpers "convert-office.ps1"))) { throw "Office helper was not unpacked." }
 
       - name: Compile Windows installer
-        working-directory: _src/PDF_Ignova_Pro_1.9.6_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.7_Source
         shell: pwsh
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
@@ -104,7 +104,7 @@ jobs:
       - name: Verify installation and uninstallation
         shell: pwsh
         run: |
-          $setup = Resolve-Path "_src/PDF_Ignova_Pro_1.9.6_Source/release-installer/PDF-Ignova-Pro-1.9.6-Setup-Windows-x64-unsigned.exe"
+          $setup = Resolve-Path "_src/PDF_Ignova_Pro_1.9.7_Source/release-installer/PDF-Ignova-Pro-1.9.7-Setup-Windows-x64-unsigned.exe"
           $installDir = Join-Path $env:RUNNER_TEMP "PDF-Ignova-Pro-test-install"
           $process = Start-Process -FilePath $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/DIR=$installDir" -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw "Installer returned $($process.ExitCode)." }
@@ -119,10 +119,10 @@ jobs:
       - name: Create release files
         shell: pwsh
         run: |
-          $source = "_src/PDF_Ignova_Pro_1.9.6_Source"
+          $source = "_src/PDF_Ignova_Pro_1.9.7_Source"
           $folder = Get-ChildItem "$source/release" -Directory | Select-Object -First 1
-          $portable = "PDF-Ignova-Pro-1.9.6-Windows-x64-portable-unsigned.zip"
-          $setup = "PDF-Ignova-Pro-1.9.6-Setup-Windows-x64-unsigned.exe"
+          $portable = "PDF-Ignova-Pro-1.9.7-Windows-x64-portable-unsigned.zip"
+          $setup = "PDF-Ignova-Pro-1.9.7-Setup-Windows-x64-unsigned.exe"
           Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath $portable -Force
           Copy-Item "$source/release-installer/$setup" $setup -Force
           foreach ($asset in @($setup, $portable)) {
@@ -133,38 +133,40 @@ jobs:
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: pdf-ignova-pro-1.9.6-windows-x64-unsigned
+          name: pdf-ignova-pro-1.9.7-windows-x64-unsigned
           path: |
-            PDF-Ignova-Pro-1.9.6-Setup-Windows-x64-unsigned.exe
-            PDF-Ignova-Pro-1.9.6-Setup-Windows-x64-unsigned.exe.sha256.txt
-            PDF-Ignova-Pro-1.9.6-Windows-x64-portable-unsigned.zip
-            PDF-Ignova-Pro-1.9.6-Windows-x64-portable-unsigned.zip.sha256.txt
+            PDF-Ignova-Pro-1.9.7-Setup-Windows-x64-unsigned.exe
+            PDF-Ignova-Pro-1.9.7-Setup-Windows-x64-unsigned.exe.sha256.txt
+            PDF-Ignova-Pro-1.9.7-Windows-x64-portable-unsigned.zip
+            PDF-Ignova-Pro-1.9.7-Windows-x64-portable-unsigned.zip.sha256.txt
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub release 1.9.6
+      - name: Publish GitHub release 1.9.7
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v1.9.6"
-          $title = "PDF Ignova Pro 1.9.6"
+          $tag = "v1.9.7"
+          $title = "PDF Ignova Pro 1.9.7"
           $assets = @(
-            "PDF-Ignova-Pro-1.9.6-Setup-Windows-x64-unsigned.exe",
-            "PDF-Ignova-Pro-1.9.6-Setup-Windows-x64-unsigned.exe.sha256.txt",
-            "PDF-Ignova-Pro-1.9.6-Windows-x64-portable-unsigned.zip",
-            "PDF-Ignova-Pro-1.9.6-Windows-x64-portable-unsigned.zip.sha256.txt"
+            "PDF-Ignova-Pro-1.9.7-Setup-Windows-x64-unsigned.exe",
+            "PDF-Ignova-Pro-1.9.7-Setup-Windows-x64-unsigned.exe.sha256.txt",
+            "PDF-Ignova-Pro-1.9.7-Windows-x64-portable-unsigned.zip",
+            "PDF-Ignova-Pro-1.9.7-Windows-x64-portable-unsigned.zip.sha256.txt"
           )
           $notes = @"
-          PDF Ignova Pro 1.9.6 para Windows 10/11 x64.
+          PDF Ignova Pro 1.9.7 para Windows 10/11 x64.
 
           Descarga recomendada: el archivo Setup.exe. Instala accesos directos y añade la desinstalación normal desde Configuración > Aplicaciones. El ZIP portátil se mantiene como alternativa.
 
-          Correcciones:
-          - OCR ventana se muestra ahora en la barra superior y permanece visible.
-          - Eliminado el botón OCR duplicado de la barra horizontal desplazable.
-          - Se conserva la corrección del motor OCR incorporada en 1.9.5.
+          Novedades y correcciones:
+          - Detecta direcciones web y correos electrónicos escritos en el PDF.
+          - Reconoce también enlaces reales incrustados aunque su dirección no sea visible.
+          - Al pulsarlos permite elegir entre abrir el destino y editar el texto asociado.
+          - La apertura externa se limita de forma segura a HTTP, HTTPS y mailto.
+          - OCR ventana permanece visible en la barra superior.
           - OCR verificado de forma funcional con Windows PowerShell 5.1.
           - Instalación y desinstalación verificadas automáticamente.
           - Se conservan los siete idiomas, PDF en blanco y tamaños A1/A2.
