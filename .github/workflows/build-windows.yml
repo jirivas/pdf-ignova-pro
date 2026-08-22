@@ -51,7 +51,7 @@ jobs:
         run: npm test
 
       - name: Run functional OCR test with Windows PowerShell 5.1
-        working-directory: _src/PDF_Ignova_Pro_1.9.7_Source
+        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
         shell: pwsh
         run: |
           Add-Type -AssemblyName System.Drawing
