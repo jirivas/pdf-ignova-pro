@@ -1,6 +1,6 @@
-# PDF Ignova Pro 1.9.7 — Programa de prueba
+# PDF Ignova Pro 1.9.8 — Programa de prueba
 
-La versión 1.9.7 se utiliza como compilación pública de prueba mientras se completa el proceso de firma digital.
+La versión 1.9.8 se utiliza como compilación pública de prueba mientras se completa el proceso de firma digital.
 
 ## Objetivo
 
@@ -17,15 +17,17 @@ Entre 5 y 10 usuarios que trabajen habitualmente con PDF en Windows 10/11 x64.
 3. Abrir un PDF escaneado.
 4. Navegar entre páginas y miniaturas.
 5. Buscar una palabra que aparezca en varias páginas y recorrer coincidencias anterior/siguiente.
-6. Editar texto o añadir un cuadro de texto.
-7. Pulsar una dirección web y un correo, y probar las opciones Abrir y Editar texto.
-8. Resaltar y tachar contenido.
-9. Reordenar, duplicar, girar y eliminar páginas.
-10. Aplicar una marca de agua.
-11. Guardar una copia y volver a abrirla.
-12. Imprimir a impresora o PDF cuando esté disponible.
-13. Probar OCR de página y OCR de ventana; la compilación ejecuta además una prueba OCR real en Windows.
-14. Repetir varias operaciones seguidas para comprobar estabilidad y consumo de recursos.
+6. Arrastrar para seleccionar un párrafo largo y copiarlo con botón derecho, menú Editar y Ctrl+C.
+7. Editar texto o añadir un cuadro de texto.
+8. Probar el zoom progresivo hasta el 500 %.
+9. Pulsar una dirección web y un correo, y probar las opciones Abrir y Editar texto.
+10. Resaltar y tachar contenido.
+11. Reordenar, duplicar, girar y eliminar páginas.
+12. Aplicar una marca de agua.
+13. Guardar una copia y volver a abrirla.
+14. Imprimir a impresora o PDF cuando esté disponible.
+15. Probar OCR de página y OCR de ventana; la compilación ejecuta además una prueba OCR real en Windows.
+16. Repetir varias operaciones seguidas para comprobar estabilidad y consumo de recursos.
 
 ## Qué informar
 
