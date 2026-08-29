@@ -7,11 +7,11 @@
 - License: GPL-3.0-or-later.
 - Support reminder: no reminder during the first 30 days; afterwards at most once every 30 days.
 - Local smoke/syntax tests pass with Node.js 22.
-- GitHub Actions workflow is configured to extract the committed source package, run `npm ci`, execute the test suite, package the Windows x64 application and upload the unsigned artifact.
+- GitHub Actions workflows extract the committed source package, run `npm ci`, execute the test suite, package Windows x64 and universal macOS applications, and upload the release artifacts.
 
 ## Before SignPath submission
 
-1. Confirm the GitHub Actions Windows build completes successfully.
+1. Confirm the GitHub Actions Windows and macOS builds complete successfully.
 2. Publish a public 1.9.8 release in the same form intended for signing.
 3. Finish the transitive third-party license/notice audit.
 4. Enable MFA for all privileged GitHub/SignPath accounts.

@@ -1,12 +1,12 @@
 # PDF Ignova Pro
 
-PDF Ignova Pro is an Open Source Windows desktop application for professional PDF workflows through a simple, productivity-focused interface.
+PDF Ignova Pro is an Open Source Windows and macOS desktop application for professional PDF workflows through a simple, productivity-focused interface.
 
 ## Current public release
 
-**1.9.8** is the current public Open Source test release and is available from GitHub Releases as a Windows x64 build produced by GitHub Actions.
+**1.9.8** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
 
-The 1.9.8 source passes the project smoke tests and a functional Windows OCR test and uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.8 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 
@@ -14,7 +14,7 @@ The 1.9.8 source passes the project smoke tests and a functional Windows OCR tes
 - Page organization and manipulation
 - Creation of a new blank A4 PDF for building documents from pasted or added pages
 - Text and annotation tools
-- Continuous selection of native PDF text, with copy from the context menu, Edit menu or Ctrl+C
+- Continuous selection of native PDF text, with copy from the context menu, Edit menu or Ctrl+C/Command+C
 - Detection of visible and embedded web/email links, with a choice to open the destination or edit its text
 - Progressive zoom levels up to 500%
 - Search across all document pages with previous/next navigation
@@ -23,12 +23,14 @@ The 1.9.8 source passes the project smoke tests and a functional Windows OCR tes
 - Printing and PDF export with A4, A3, A2 and A1 paper sizes
 - Watermarks
 - PDF conversion workflows
-- OCR and Office conversion helpers correctly unpacked from Electron ASAR builds
+- Local OCR through Windows OCR or macOS Vision
+- OCR and conversion helpers correctly unpacked from Electron ASAR builds
 - Windows installer with Start menu/desktop shortcuts and standard uninstallation
+- Universal macOS DMG for Apple Silicon and Intel
 
 ## Download
 
-Use the **Setup.exe installer** from the [1.9.8 release](https://github.com/jirivas/pdf-ignova-pro/releases/tag/v1.9.8). A portable ZIP is also available as a secondary option.
+Use the official website downloads: [Windows installer](https://ignova-tech.jirivasnegreira.chatgpt.site/download) or [universal macOS installer](https://ignova-tech.jirivasnegreira.chatgpt.site/download/mac). A Windows portable ZIP remains available from the release page as a secondary option.
 
 ## License
 
@@ -38,9 +40,9 @@ The source-code license does not grant permission to present modified or third-p
 
 ## Builds
 
-Official Windows binaries are produced from this public repository by GitHub Actions on GitHub-hosted Windows runners. The build installs dependencies from `package-lock.json`, executes the source tests, performs real OCR with Windows PowerShell 5.1, builds the x64 application, compiles the installer, and verifies both installation and uninstallation.
+Official binaries are produced from this public repository by GitHub Actions. The Windows workflow performs real OCR with Windows PowerShell 5.1, builds the x64 installer and verifies installation and uninstallation. After it succeeds, the macOS workflow compiles universal Swift helpers, performs real OCR with Vision, packages Apple Silicon and Intel slices in one application, verifies the bundle and creates the DMG.
 
-The current public test build is **not digitally signed**. An application to the free SignPath Foundation program was reviewed but was not approved at this early stage because the project does not yet have enough independent public adoption/visibility. We intend to reapply after the project has accumulated verifiable community usage and participation.
+The Windows test build is **not digitally signed**. The macOS build is ad-hoc signed for bundle integrity but is not Apple-notarized, so both systems may display a first-run warning. An application to the free SignPath Foundation program was reviewed but was not approved at this early stage because the project does not yet have enough independent public adoption/visibility. We intend to reapply after the project has accumulated verifiable community usage and participation.
 
 ## Support license
 
