@@ -1,0 +1,46 @@
+name: Build Microsoft Store MSIX
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - codex/msix-store-1.9.8
+    paths:
+      - 'source/**'
+      - 'packaging/msix/**'
+      - '.github/workflows/build-msix-store.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package-store:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+      - name: Install locked dependencies
+        working-directory: source
+        run: npm ci
+      - name: Test application source
+        working-directory: source
+        run: npm test
+      - name: Package Windows x64
+        working-directory: source
+        run: npm run package:windows
+      - name: Create and validate Microsoft Store MSIX
+        shell: pwsh
+        run: ./packaging/msix/build-msix.ps1
+      - name: Retain Store package and validation evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: PDF-IGNOVA-PRO-Microsoft-Store-MSIX
+          path: release-msix/*
+          if-no-files-found: error
+          retention-days: 30

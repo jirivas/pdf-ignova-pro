@@ -13,7 +13,9 @@ const { getMessages, normalizeLanguage } = require("./native-i18n.cjs");
 const { fitPdfToPaper, normalizePaperSize } = require("./print-paper.cjs");
 
 app.setName("PDF Ignova Pro");
-app.setAppUserModelId("com.ignova.pdf-ignova-pro");
+app.setAppUserModelId(process.windowsStore
+  ? "IGNOVA.PDFIGNOVAPRO_x92r9yza1p97c!App"
+  : "com.ignova.pdf-ignova-pro");
 
 const supportedLaunchExtensions = new Set([
   ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
