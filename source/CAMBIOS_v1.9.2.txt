@@ -1,0 +1,11 @@
+PDF IGNOVA PRO 1.9.2 — CAMBIOS
+
+LANZAMIENTO OPEN SOURCE Y FIRMA
+
+- El recordatorio de apoyo pasa a mostrarse como máximo una vez cada 30 días, después de los primeros 30 días de uso.
+- El programa continúa funcionando completo aunque no se active una licencia de apoyo.
+- Se unifica la licencia del código propio como GPL-3.0-or-later.
+- Se prepara el proyecto para compilación automática y verificable mediante GitHub Actions.
+- Se conserva la búsqueda en todas las páginas incorporada en la versión 1.9.1.
+
+No se bloquea ninguna función por no adquirir una licencia de apoyo.

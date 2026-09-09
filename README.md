@@ -38,6 +38,20 @@ The project's own code is distributed under **GNU GPL-3.0-or-later**. Third-part
 
 The source-code license does not grant permission to present modified or third-party builds as official IGNOVA releases. See `TRADEMARK.md`.
 
+## Source code
+
+The complete, browsable application source is in [`source/`](source/), including the Electron application, interface, OCR and conversion helpers, tests, Windows installer definition and macOS files.
+
+The official Windows and macOS workflows build directly from this visible directory. [`PDF_Ignova_Pro_1.9.8_Codigo_Fuente_GPLv3.zip`](PDF_Ignova_Pro_1.9.8_Codigo_Fuente_GPLv3.zip) is retained only as a convenient downloadable snapshot of the same 1.9.8 source.
+
+To run the cross-platform source checks locally:
+
+```sh
+cd source
+npm ci
+npm test
+```
+
 ## Builds
 
 Official binaries are produced from this public repository by GitHub Actions. The Windows workflow performs real OCR with Windows PowerShell 5.1, builds the x64 installer and verifies installation and uninstallation. After it succeeds, the macOS workflow compiles universal Swift helpers, performs real OCR with Vision, packages Apple Silicon and Intel slices in one application, verifies the bundle and creates the DMG.

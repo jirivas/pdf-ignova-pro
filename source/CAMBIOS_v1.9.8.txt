@@ -1,0 +1,14 @@
+PDF IGNOVA PRO 1.9.8 — CAMBIOS
+
+- Permite arrastrar y seleccionar fragmentos largos de texto nativo en PDF
+  editables, incluidos párrafos formados por varios bloques internos.
+- El botón derecho sobre una selección muestra «Copiar texto seleccionado».
+- «Editar» incorpora las órdenes «Seleccionar texto» y «Copiar texto
+  seleccionado», además del acceso con Ctrl+C.
+- Un clic sobre texto sin selección conserva la edición directa existente.
+- El zoom máximo aumenta de 240 % a 500 % y los botones recorren niveles
+  progresivos para ampliar y reducir con menos pulsaciones.
+- Las nuevas órdenes y mensajes se incluyen en los siete idiomas disponibles.
+- Se añade, sin cambiar de versión, una distribución universal para macOS 12
+  o posterior, compatible con Apple Silicon e Intel, con OCR local mediante
+  Vision, TIFF multipágina y atajos nativos con la tecla Comando.

@@ -1,0 +1,11 @@
+PDF IGNOVA PRO 1.9.6 — CAMBIOS
+
+- OCR ventana se mueve a la barra superior, antes del buscador, para que
+  permanezca visible aunque la barra horizontal de edición no quepa completa.
+- Se elimina OCR ventana de la barra horizontal y de su personalizador para
+  evitar duplicados y configuraciones antiguas que vuelvan a ocultarlo.
+- El botón conserva el mismo reconocimiento por selección rectangular y muestra
+  visualmente cuándo la herramienta está activa.
+- En anchuras reducidas el texto se oculta, pero el icono OCR continúa visible.
+
+Copyright © 2026 José Ignacio Rivas Negreira / IGNOVA Ingeniería.

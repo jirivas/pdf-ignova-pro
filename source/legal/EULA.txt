@@ -1,0 +1,18 @@
+PDF IGNOVA PRO — LICENCIA DEL CÓDIGO PROPIO
+Versión 1.9.8 — 29 de agosto de 2026
+
+Copyright © 2026 José Ignacio Rivas Negreira / IGNOVA Ingeniería.
+
+El código propio de PDF Ignova Pro se distribuye bajo GNU General Public
+License versión 3 o posterior (GPL-3.0-or-later). Puede usarse, estudiarse,
+modificarse y redistribuirse conforme a dicha licencia. Los componentes de
+terceros conservan sus licencias respectivas.
+
+La licencia permanente por equipo es una forma voluntaria de apoyar la
+compilación oficial y elimina el recordatorio mensual. No es necesaria para
+seguir utilizando todas las funciones ni limita los derechos concedidos por
+la GPL.
+
+La GPL no concede derechos sobre el nombre, los logotipos ni los signos
+distintivos de PDF Ignova Pro o IGNOVA. El texto íntegro de la GPL se incluye
+en LICENSE-GPL-3.0.txt.

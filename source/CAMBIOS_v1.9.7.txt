@@ -1,0 +1,14 @@
+PDF IGNOVA PRO 1.9.7 — CAMBIOS
+
+- Los textos que contienen una dirección web o un correo electrónico se
+  reconocen al usar la herramienta Seleccionar.
+- También se detectan las anotaciones de enlace incorporadas en el PDF, aunque
+  el texto visible no muestre la dirección de destino.
+- Al pulsar un enlace se muestran las dos acciones seguras: abrir el destino o
+  editar el texto asociado. No se abre ninguna página automáticamente.
+- La apertura externa está restringida a HTTP, HTTPS y correo (mailto); se
+  bloquean protocolos ejecutables o locales.
+- El nuevo diálogo está traducido al español, inglés, portugués, alemán,
+  francés, chino simplificado y malayo.
+
+Copyright © 2026 José Ignacio Rivas Negreira / IGNOVA Ingeniería.

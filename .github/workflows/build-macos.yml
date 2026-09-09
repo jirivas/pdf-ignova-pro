@@ -20,30 +20,23 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Extract committed 1.9.8 source archive
-        shell: bash
-        run: |
-          mkdir -p _src
-          ditto -x -k PDF_Ignova_Pro_1.9.8_Codigo_Fuente_GPLv3.zip _src
-          test -f _src/PDF_Ignova_Pro_1.9.8_Source/package.json
-
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: _src/PDF_Ignova_Pro_1.9.8_Source/package-lock.json
+          cache-dependency-path: source/package-lock.json
 
       - name: Install dependencies
-        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
+        working-directory: source
         run: npm ci
 
       - name: Run source tests
-        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
+        working-directory: source
         run: npm test
 
       - name: Create macOS application icon
-        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
+        working-directory: source
         shell: bash
         run: |
           rm -rf app/icon.iconset
@@ -61,11 +54,11 @@ jobs:
           iconutil -c icns app/icon.iconset -o app/icon.icns
 
       - name: Compile universal native helpers
-        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
+        working-directory: source
         run: bash scripts/build-macos-helpers.sh
 
       - name: Run functional OCR and TIFF tests
-        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
+        working-directory: source
         shell: bash
         run: |
           xcrun swiftc -O tests/create-macos-ocr-fixture.swift -o "$RUNNER_TEMP/create-macos-ocr-fixture"
@@ -82,11 +75,11 @@ jobs:
           test -s "$first_page"
 
       - name: Package universal macOS application
-        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
+        working-directory: source
         run: npm run package:mac
 
       - name: Verify, ad-hoc sign and smoke-test application
-        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
+        working-directory: source
         shell: bash
         run: |
           app_path="release-mac/PDF Ignova Pro-darwin-universal/PDF Ignova Pro.app"
@@ -108,7 +101,7 @@ jobs:
           codesign --verify --deep --strict --verbose=2 "$app_path"
 
       - name: Create and verify DMG installer
-        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
+        working-directory: source
         shell: bash
         run: |
           app_path="release-mac/PDF Ignova Pro-darwin-universal/PDF Ignova Pro.app"
@@ -131,13 +124,13 @@ jobs:
         with:
           name: pdf-ignova-pro-1.9.8-macos-universal-unnotarized
           path: |
-            _src/PDF_Ignova_Pro_1.9.8_Source/PDF-Ignova-Pro-1.9.8-macOS-Universal-unnotarized.dmg
-            _src/PDF_Ignova_Pro_1.9.8_Source/PDF-Ignova-Pro-1.9.8-macOS-Universal-unnotarized.dmg.sha256.txt
+            source/PDF-Ignova-Pro-1.9.8-macOS-Universal-unnotarized.dmg
+            source/PDF-Ignova-Pro-1.9.8-macOS-Universal-unnotarized.dmg.sha256.txt
           if-no-files-found: error
           retention-days: 30
 
       - name: Add macOS installer to release 1.9.8
-        working-directory: _src/PDF_Ignova_Pro_1.9.8_Source
+        working-directory: source
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

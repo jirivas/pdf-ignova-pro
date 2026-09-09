@@ -1,0 +1,28 @@
+PDF IGNOVA PRO 1.9.4 — CAMBIOS
+
+OCR Y CONVERSIÓN
+
+- Se corrige la ejecución de los scripts auxiliares de OCR y conversión cuando
+  la aplicación está empaquetada dentro de app.asar.
+- Se mantiene una ruta alternativa segura que materializa el script en una
+  carpeta normal si una distribución omite app.asar.unpacked.
+- Se añade OCR de ventana: el usuario arrastra una zona de la página, revisa el
+  texto reconocido y puede copiarlo o insertarlo en el PDF.
+
+CREACIÓN DE DOCUMENTOS
+
+- Se añade “Nuevo PDF en blanco”, que crea una página A4 y permite construir un
+  documento pegando, añadiendo, copiando o moviendo páginas.
+
+IDIOMAS
+
+- Se amplía el selector superior a siete idiomas: español, inglés, portugués,
+  alemán, francés, chino simplificado y malayo.
+- Se traducen los menús principales, las nuevas herramientas, la impresión y
+  los cuadros nativos de licencia para los dos idiomas nuevos.
+
+IMPRESIÓN Y LICENCIAS
+
+- Se conservan los formatos de papel original, A4, A3, A2 y A1.
+- Las licencias permanentes actuales siguen siendo válidas para toda la rama
+  1.x y no se modifica el modelo de apoyo existente.

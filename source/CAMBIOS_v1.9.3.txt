@@ -1,0 +1,29 @@
+PDF IGNOVA PRO 1.9.3 — CAMBIOS
+
+INTERFAZ MULTIDIOMA
+
+- Se incorpora un selector superior con banderas para español, inglés,
+  portugués, alemán y francés.
+- Se traducen los menús, las barras de herramientas, los paneles, los cuadros
+  de edición, la impresión y los avisos del sistema de licencia.
+- El idioma elegido se conserva para los siguientes usos.
+
+IMPRESIÓN
+
+- Se añaden los formatos A2 y A1, además de tamaño original, A4 y A3.
+- Los PDF guardados desde Imprimir se crean con el tamaño físico seleccionado;
+  no se limita a cambiar el nombre de una opción.
+- La orientación se adapta automáticamente y el contenido se centra sin
+  deformarse.
+- Se conservan las páginas en blanco y se reposicionan las anotaciones al
+  ajustar el documento al nuevo papel.
+
+ESTABILIDAD Y COMPATIBILIDAD
+
+- Se conserva sin cambios el modelo de licencia de apoyo: 30 días sin avisos,
+  recordatorio mensual como máximo y funcionamiento completo sin bloqueo.
+- Se mejora la limpieza de recursos temporales de impresión.
+- Se corrigen identificadores heredados de PDF Estudio en el estado interno de
+  impresión, manteniendo un alias para no romper compatibilidad.
+- Se añaden pruebas automáticas de idiomas, formatos A2/A1, licencia y búsqueda
+  en todas las páginas.

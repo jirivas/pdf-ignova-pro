@@ -1,0 +1,16 @@
+PDF IGNOVA PRO 1.9.8 — EDICIÓN PARA macOS
+
+- Se incorpora una aplicación universal para Mac compatible con procesadores
+  Apple Silicon e Intel y con macOS 12 Monterey o posterior.
+- El OCR local utiliza el framework Vision de macOS y reconoce una página o
+  una zona rectangular seleccionada sin enviar el documento a un servidor.
+- La conversión de TIFF de varias páginas se realiza mediante ImageIO y AppKit.
+- Los atajos del menú muestran la tecla Comando en macOS y conservan Ctrl en
+  Windows. Comando+C copia el texto nativo seleccionado.
+- Los PDF pueden asociarse a la aplicación y abrirse desde Finder.
+- La licencia de apoyo actual se conserva: identifica el Mac mediante su UUID
+  de plataforma y no bloquea ninguna función si no se adquiere.
+- Los documentos de Office se convierten con LibreOffice cuando está instalado.
+  La conversión directa de DWG/DXF sigue necesitando AutoCAD para Windows.
+- La imagen publicada está firmada de forma ad hoc, pero no está notarizada
+  por Apple. macOS puede pedir confirmación adicional al abrirla por primera vez.

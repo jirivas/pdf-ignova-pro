@@ -1,0 +1,27 @@
+PDF IGNOVA PRO — AVISOS DE COMPONENTES DE TERCEROS
+Actualización: 4 de agosto de 2026
+
+PDF Ignova Pro incorpora componentes de terceros. Cada componente conserva su
+autoría y su licencia. Este archivo es informativo y no sustituye los textos íntegros
+incluidos en "LICENCIAS_TERCEROS", "LICENSE" y "LICENSES.chromium.html".
+
+COMPONENTES PRINCIPALES
+
+- Electron 43.2.0 — MIT.
+- Chromium y componentes asociados — licencias reproducidas en
+  LICENSES.chromium.html.
+- React y React DOM 19.2.6 — MIT.
+- PDF.js / pdfjs-dist 5.4.296 — Apache License 2.0.
+- pdf-lib 1.17.1 y módulos @pdf-lib — MIT.
+- @pdf-lib/fontkit 1.1.1 — MIT.
+- @signpdf/signpdf, @signpdf/signer-p12, @signpdf/placeholder-pdf-lib y
+  @signpdf/utils 3.3.0 — MIT.
+- SheetJS xlsx 0.18.5 — Apache License 2.0.
+- docx 9.5.1 — MIT.
+- Lucide React 0.468.0 — ISC.
+- pako 1.0.11 — MIT y zlib.
+- tslib 1.14.1 — 0BSD.
+- buffer 6.0.3 — MIT.
+
+Los nombres y marcas de terceros pertenecen a sus respectivos titulares. Su inclusión
+no implica patrocinio ni asociación comercial con PDF Ignova Pro o IGNOVA Ingeniería.

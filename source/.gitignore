@@ -1,0 +1,7 @@
+node_modules/
+release/
+dist/
+*.log
+*.pfx
+*.p12
+.env

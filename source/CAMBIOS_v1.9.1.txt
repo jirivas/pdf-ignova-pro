@@ -1,0 +1,12 @@
+PDF IGNOVA PRO 1.9.1 — CAMBIOS
+
+BÚSQUEDA EN TODO EL DOCUMENTO
+
+- El buscador recorre todas las páginas del PDF.
+- Cada coincidencia se resalta sobre el texto de la página correspondiente.
+- Las flechas anterior y siguiente permiten recorrer los resultados uno a uno.
+- Se muestra el contador «resultado X de Y», la página y un fragmento del texto.
+- Enter avanza al resultado siguiente y Mayús+Enter vuelve al anterior.
+- Los PDF formados únicamente por imágenes requieren OCR antes de buscar texto.
+
+El resto de las funciones de PDF Ignova Pro 1.9.0 se mantiene sin cambios.

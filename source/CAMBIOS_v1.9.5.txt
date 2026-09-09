@@ -1,0 +1,13 @@
+PDF IGNOVA PRO 1.9.5 — CAMBIOS
+16 de agosto de 2026
+
+- Corregido el OCR de Windows: StorageFile.OpenAsync devuelve
+  IRandomAccessStream y la versión 1.9.4 intentaba convertirlo al tipo WinRT
+  equivocado. El fallo impedía iniciar cualquier reconocimiento.
+- Añadida una prueba funcional que genera una imagen y ejecuta OCR real con
+  Windows PowerShell 5.1.
+- Añadido instalador para Windows x64 con accesos directos, registro en
+  Configuración > Aplicaciones y desinstalador.
+- El instalador conserva los documentos y los datos de licencia del usuario al
+  desinstalar.
+- Se mantiene un ZIP portátil como descarga secundaria.

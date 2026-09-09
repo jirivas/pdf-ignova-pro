@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1268e8" />
+    <title>PDF Ignova Pro</title>
+    <link rel="icon" href="./icon-192.png" />
+    <link rel="stylesheet" href="./editor-assets/editor-entry.css" />
+    <link rel="stylesheet" href="./editor-assets/editor-ui-v16.css" />
+    <link rel="stylesheet" href="./editor-assets/toolbar-customizer.css" />
+    <link rel="stylesheet" href="./editor-assets/i18n.css" />
+  </head>
+  <body>
+    <div id="boot-status" style="font:16px Arial,sans-serif;padding:32px;color:#252a31">Iniciando PDF Ignova Pro…</div>
+    <div id="editor-root"></div>
+    <noscript>Activa JavaScript para utilizar PDF Ignova Pro.</noscript>
+    <script>
+      addEventListener("error", event => {
+        const status = document.getElementById("boot-status");
+        if (status) status.textContent = "No se pudo iniciar la aplicación: " + (event.message || "error desconocido");
+      });
+      addEventListener("unhandledrejection", event => {
+        const status = document.getElementById("boot-status");
+        if (status) status.textContent = "No se pudo iniciar la aplicación: " + (event.reason?.message || event.reason || "error desconocido");
+      });
+    </script>
+    <script src="./editor-assets/link-utils.js"></script>
+    <script src="./editor-assets/text-selection-utils.js"></script>
+    <script src="./editor-assets/i18n-extra.js"></script>
+    <script src="./editor-assets/i18n-data.js"></script>
+    <script src="./editor-assets/i18n.js"></script>
+    <script type="module" src="./editor-assets/editor-entry.js"></script>
+    <script defer src="./editor-assets/toolbar-customizer.js"></script>
+  </body>
+</html>

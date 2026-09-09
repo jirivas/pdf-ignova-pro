@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 14" role="img" aria-label="Malaysia">
+  <rect width="28" height="14" fill="#fff"/>
+  <g fill="#cc0001">
+    <rect width="28" height="1" y="0"/><rect width="28" height="1" y="2"/>
+    <rect width="28" height="1" y="4"/><rect width="28" height="1" y="6"/>
+    <rect width="28" height="1" y="8"/><rect width="28" height="1" y="10"/>
+    <rect width="28" height="1" y="12"/>
+  </g>
+  <rect width="14" height="8" fill="#010066"/>
+  <circle cx="5" cy="4" r="2.45" fill="#ffcc00"/>
+  <circle cx="5.85" cy="3.55" r="2.05" fill="#010066"/>
+  <polygon fill="#ffcc00" points="10.00,2.75 10.12,3.46 10.54,2.87 10.34,3.57 10.98,3.22 10.50,3.76 11.22,3.72 10.55,4.00 11.22,4.28 10.50,4.24 10.98,4.78 10.34,4.43 10.54,5.13 10.12,4.54 10.00,5.25 9.88,4.54 9.46,5.13 9.66,4.43 9.02,4.78 9.50,4.24 8.78,4.28 9.45,4.00 8.78,3.72 9.50,3.76 9.02,3.22 9.66,3.57 9.46,2.87 9.88,3.46"/>
+</svg>
