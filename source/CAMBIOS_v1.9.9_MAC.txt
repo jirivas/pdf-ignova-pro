@@ -1,0 +1,11 @@
+PDF IGNOVA PRO 1.9.9 — EDICIÓN PARA macOS
+
+- Incluye todas las mejoras de organización, zoom, texto, resaltado y guardado
+  de la versión 1.9.9.
+- La vista de dos paneles admite arrastrar páginas entre PDF; mantén Comando al
+  soltar para copiar en lugar de mover.
+- «Guardar como» utiliza el cuadro nativo de macOS y conserva la extensión PDF.
+- Se mantiene la aplicación universal para Apple Silicon e Intel, el OCR local
+  mediante Vision y la compatibilidad con macOS 12 o posterior.
+- El DMG continúa firmado de forma ad hoc y no está notarizado por Apple.
+

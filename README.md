@@ -4,19 +4,23 @@ PDF Ignova Pro is an Open Source Windows and macOS desktop application for profe
 
 ## Current public release
 
-**1.9.8** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
+**1.9.9** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
 
-The 1.9.8 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.9 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 
 - Opening and viewing PDF documents
 - Page organization and manipulation
 - Creation of a new blank A4 PDF for building documents from pasted or added pages
-- Text and annotation tools
+- Text and annotation tools with fixed-position multiline text, persistent font and text colour
 - Continuous selection of native PDF text, with copy from the context menu, Edit menu or Ctrl+C/Command+C
 - Detection of visible and embedded web/email links, with a choice to open the destination or edit its text
-- Progressive zoom levels up to 500%
+- Horizontal all-pages overview at minimum zoom, followed by fit-page, fit-width and progressive zoom levels up to 500%
+- Editable page number for direct navigation
+- Dual-document organizer for moving or copying pages by drag and drop
+- Reliable native Save As dialog with safe file replacement
+- Unified colour-selectable cover tool and contrast-preserving highlights
 - Search across all document pages with previous/next navigation
 - Region OCR for recognising only a selected part of a page
 - Interface languages: Spanish, English, Portuguese, German, French, Simplified Chinese and Malay
@@ -42,7 +46,7 @@ The source-code license does not grant permission to present modified or third-p
 
 The complete, browsable application source is in [`source/`](source/), including the Electron application, interface, OCR and conversion helpers, tests, Windows installer definition and macOS files.
 
-The official Windows and macOS workflows build directly from this visible directory. [`PDF_Ignova_Pro_1.9.8_Codigo_Fuente_GPLv3.zip`](PDF_Ignova_Pro_1.9.8_Codigo_Fuente_GPLv3.zip) is retained only as a convenient downloadable snapshot of the same 1.9.8 source.
+The official Windows and macOS workflows build directly from this visible directory. [`PDF_Ignova_Pro_1.9.9_Codigo_Fuente_GPLv3.zip`](PDF_Ignova_Pro_1.9.9_Codigo_Fuente_GPLv3.zip) is retained only as a convenient downloadable snapshot of the same 1.9.9 source.
 
 To run the cross-platform source checks locally:
 

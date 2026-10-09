@@ -1,0 +1,19 @@
+PDF IGNOVA PRO 1.9.9 — CAMBIOS
+
+- El zoom mínimo muestra todas las páginas en una tira horizontal arrastrable.
+  Los siguientes niveles ofrecen vista de página completa, ajuste al ancho y
+  ampliación progresiva hasta el 500 %.
+- El número de página es editable tanto en la barra inferior como en
+  Propiedades y permite saltar directamente a una página.
+- «Procesamiento local» y «Programa de escritorio» pasan al panel Propiedades.
+- El resaltado utiliza mezcla multiplicativa para conservar el contraste del
+  texto que queda debajo, también al guardar el PDF.
+- Se unifican «Tapado negro» y «Tapado blanco» en una sola herramienta
+  «Tapado», con selector de blanco, negro o cualquier otro color.
+- Los cuadros de texto conservan su posición, tamaño, saltos de línea, color y
+  fuente. La exportación mantiene el anclaje superior del texto multilínea.
+- «Guardar como» usa el selector nativo del sistema y escritura temporal segura
+  para evitar descargas incompletas o fallos intermitentes.
+- La vista «2 paneles» permite mostrar dos PDF y mover o copiar páginas entre
+  ellos arrastrando; Ctrl o Comando copia en lugar de mover.
+

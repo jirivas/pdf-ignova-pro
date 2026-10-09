@@ -614,6 +614,67 @@ function suggestedPrintedPdfName(documentName) {
   return `${stem}_impresion.pdf`;
 }
 
+function suggestedSavedPdfName(documentName) {
+  const rawName = typeof documentName === "string" && documentName.trim()
+    ? path.basename(documentName.trim())
+    : "documento_editado.pdf";
+  const stem = path.parse(rawName).name
+    .replace(/[<>:"/\\|?*\u0000-\u001f]+/g, "_")
+    .trim()
+    .slice(0, 120) || "documento_editado";
+  return `${stem}.pdf`;
+}
+
+async function writeFileSafely(outputPath, bytes) {
+  const temporaryPath = path.join(
+    path.dirname(outputPath),
+    `.${path.basename(outputPath)}.${process.pid}.${Date.now()}.tmp`,
+  );
+  try {
+    await fsp.writeFile(temporaryPath, bytes, { flag: "wx" });
+    try {
+      await fsp.rename(temporaryPath, outputPath);
+    } catch (error) {
+      if (!(["EEXIST", "EPERM", "EACCES"].includes(error?.code))) throw error;
+      await fsp.rm(outputPath, { force: true });
+      await fsp.rename(temporaryPath, outputPath);
+    }
+  } catch (error) {
+    await fsp.rm(temporaryPath, { force: true }).catch(() => {});
+    throw error;
+  }
+}
+
+ipcMain.handle("save-pdf-as", async (event, pdfArrayBuffer, documentName) => {
+  const text = getMessages(uiLanguage).print;
+  if (!(pdfArrayBuffer instanceof ArrayBuffer) && !ArrayBuffer.isView(pdfArrayBuffer)) {
+    throw new Error(text.invalidData);
+  }
+  const pdfBuffer = pdfArrayBuffer instanceof ArrayBuffer
+    ? Buffer.from(new Uint8Array(pdfArrayBuffer))
+    : Buffer.from(pdfArrayBuffer.buffer, pdfArrayBuffer.byteOffset, pdfArrayBuffer.byteLength);
+  if (!pdfBuffer.length) throw new Error(text.emptyDocument);
+
+  const owner = BrowserWindow.fromWebContents(event.sender);
+  const saveOptions = {
+    title: text.saveTitle,
+    defaultPath: path.join(app.getPath("documents"), suggestedSavedPdfName(documentName)),
+    filters: [{ name: text.pdfFilter, extensions: ["pdf"] }],
+    properties: ["showOverwriteConfirmation", "createDirectory"],
+  };
+  const saveResult = owner && !owner.isDestroyed()
+    ? await dialog.showSaveDialog(owner, saveOptions)
+    : await dialog.showSaveDialog(saveOptions);
+  if (saveResult.canceled || !saveResult.filePath) {
+    return { ok: false, canceled: true };
+  }
+  const outputPath = saveResult.filePath.toLowerCase().endsWith(".pdf")
+    ? saveResult.filePath
+    : `${saveResult.filePath}.pdf`;
+  await writeFileSafely(outputPath, pdfBuffer);
+  return { ok: true, canceled: false, fileName: path.basename(outputPath) };
+});
+
 async function showPrintDestination(owner, language) {
   const text = getMessages(language).print;
   const options = {

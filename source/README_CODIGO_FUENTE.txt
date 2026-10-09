@@ -1,7 +1,7 @@
-PDF IGNOVA PRO 1.9.8 — CÓDIGO FUENTE DISTRIBUIDO
+PDF IGNOVA PRO 1.9.9 — CÓDIGO FUENTE DISTRIBUIDO
 
 Este paquete contiene el código JavaScript y los recursos ejecutados por la
-aplicación Electron PDF Ignova Pro 1.9.8.
+aplicación Electron PDF Ignova Pro 1.9.9.
 
 NOVEDADES DE ESTA VERSIÓN
 La interfaz incorpora español, inglés, portugués, alemán, francés, chino
@@ -22,11 +22,15 @@ texto. Solo permite abrir destinos HTTP, HTTPS y mailto.
 La versión 1.9.8 permite seleccionar fragmentos largos de texto nativo, copiarlos
 con el botón derecho, desde el menú Editar o con Ctrl+C/Comando+C, y amplía el
 zoom hasta el 500 % mediante niveles progresivos.
-Esta misma versión incorpora una distribución universal para macOS 12 o posterior,
+Esa misma versión incorpora una distribución universal para macOS 12 o posterior,
 compatible con Apple Silicon e Intel. En Mac, el OCR local utiliza Vision, los
 TIFF de varias páginas se procesan con ImageIO y los documentos pueden abrirse
 desde Finder. Los archivos de Office requieren LibreOffice en macOS y DWG/DXF
 continúa siendo una conversión exclusiva de Windows con AutoCAD.
+La versión 1.9.9 añade la vista general horizontal de todas las páginas, salto
+directo mediante el número de página, resaltado que conserva el contraste,
+tapado de color unificado, texto multilínea estable, guardado nativo seguro y
+un organizador de dos paneles para arrastrar páginas entre documentos.
 
 LICENCIA DEL CÓDIGO PROPIO
 El código propio se distribuye bajo GNU GPL versión 3 o posterior

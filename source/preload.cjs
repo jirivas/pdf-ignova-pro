@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld("pdfEstudio", {
   },
   printPdf: (pdfBytes, documentName, options) =>
     ipcRenderer.invoke("print-pdf", pdfBytes, documentName, options),
+  savePdfAs: (pdfBytes, documentName) =>
+    ipcRenderer.invoke("save-pdf-as", pdfBytes, documentName),
   setUiLanguage: language => ipcRenderer.invoke("set-ui-language", language),
   openExternalLink: url => ipcRenderer.invoke("open-external-link", url),
   ocrPage: imageBytes => ipcRenderer.invoke("ocr-page", imageBytes),

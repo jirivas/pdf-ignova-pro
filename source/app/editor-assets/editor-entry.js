@@ -13434,6 +13434,8 @@ function cs() {
     [Tl, Lf] = (0, I.useState)(null),
     [W, Me] = (0, I.useState)("hand"),
     [Cf, Gu] = (0, I.useState)(82),
+    [dualPanelOpen, setDualPanelOpen] = (0, I.useState)(!1),
+    [pageNumberDraft, setPageNumberDraft] = (0, I.useState)("1"),
     [hs, yf] = (0, I.useState)(!0),
     [fn, kl] = (0, I.useState)(!0),
     [dn, nn] = (0, I.useState)("pages"),
@@ -13461,7 +13463,7 @@ function cs() {
     [cn, ax] = (0, I.useState)(3),
     [highlightColor, setHighlightColor] = (0, I.useState)("#ffe65c"),
     [highlightOpacity, setHighlightOpacity] = (0, I.useState)(0.38),
-    [redactColor, setRedactColor] = (0, I.useState)("#111111"),
+    [redactColor, setRedactColor] = (0, I.useState)("#ffffff"),
     [ocrSelection, setOcrSelection] = (0, I.useState)(null),
     [ocrRegionResult, setOcrRegionResult] = (0, I.useState)(""),
     [ocrRegionOpen, setOcrRegionOpen] = (0, I.useState)(!1),
@@ -13492,6 +13494,9 @@ function cs() {
       );
     }, [Q, O]));
   (0, I.useEffect)(() => {
+    O.length < 2 && setDualPanelOpen(!1);
+  }, [O.length]);
+  (0, I.useEffect)(() => {
     let syncSelection = () => {
       let selectedText =
         W === "select"
@@ -13505,6 +13510,10 @@ function cs() {
       syncSelection());
     return () => document.removeEventListener("selectionchange", syncSelection);
   }, [W, $t]);
+  (0, I.useEffect)(() => {
+    let pageIndex = Math.max(0, w.findIndex((page) => page.id === $t));
+    setPageNumberDraft(w.length ? String(pageIndex + 1) : "0");
+  }, [$t, w.length]);
   let Ue = Math.max(
       0,
       w.findIndex((n) => n.id === $t),
@@ -13520,6 +13529,17 @@ function cs() {
     F = (0, I.useCallback)((n) => {
       (Ls(n), setTimeout(() => Ls(""), 2800));
     }, []),
+    commitPageNumber = (0, I.useCallback)(() => {
+      let requestedPage = Number.parseInt(pageNumberDraft, 10);
+      if (!w.length) {
+        setPageNumberDraft("0");
+        return;
+      }
+      if (!Number.isFinite(requestedPage)) requestedPage = Ue + 1;
+      requestedPage = Ee(requestedPage, 1, w.length);
+      Hl(requestedPage - 1);
+      setPageNumberDraft(String(requestedPage));
+    }, [pageNumberDraft, Ue, w.length]),
     readNativePdfSelection = (0, I.useCallback)(() => {
       return (
         window.PDF_IGNOVA_TEXT_SELECTION?.readPdfSelection(document) || ""
@@ -14037,6 +14057,120 @@ function cs() {
       },
       [$t, Ue, Q, ue, F, xf],
     ),
+    transferPagesBetweenPanels = (0, I.useCallback)(
+      (event, targetDocumentId, targetIndex) => {
+        event.preventDefault();
+        event.stopPropagation();
+        let payload;
+        try {
+          payload = JSON.parse(
+            event.dataTransfer.getData("application/x-pdf-ignova-pages"),
+          );
+        } catch {
+          return;
+        }
+        if (!payload?.documentId || !Array.isArray(payload.pageIds)) return;
+        let copyPages = event.ctrlKey || event.metaKey || payload.copy,
+          documents = i.current.map((documentItem) =>
+            documentItem.id === Q
+              ? {
+                  ...documentItem,
+                  pages: Wt(o.current),
+                  marks: Lt(f.current),
+                }
+              : {
+                  ...documentItem,
+                  pages: Wt(documentItem.pages),
+                  marks: Lt(documentItem.marks),
+                },
+          ),
+          sourceDocument = documents.find(
+            (documentItem) => documentItem.id === payload.documentId,
+          ),
+          targetDocument = documents.find(
+            (documentItem) => documentItem.id === targetDocumentId,
+          );
+        if (!sourceDocument || !targetDocument) return;
+        let requestedIds = new Set(payload.pageIds),
+          sourcePages = sourceDocument.pages.filter((page) => requestedIds.has(page.id));
+        if (!sourcePages.length) return;
+
+        if (sourceDocument.id === targetDocument.id) {
+          let movingIds = new Set(sourcePages.map((page) => page.id)),
+            remainingPages = sourceDocument.pages.filter((page) => !movingIds.has(page.id)),
+            precedingMovedPages = sourceDocument.pages
+              .slice(0, targetIndex)
+              .filter((page) => movingIds.has(page.id)).length,
+            insertionIndex = Ee(
+              targetIndex - precedingMovedPages,
+              0,
+              remainingPages.length,
+            ),
+            reorderedPages = [...remainingPages];
+          reorderedPages.splice(insertionIndex, 0, ...sourcePages);
+          documents = documents.map((documentItem) =>
+            documentItem.id === sourceDocument.id
+              ? { ...documentItem, pages: reorderedPages }
+              : documentItem,
+          );
+        } else {
+          let idMap = new Map(),
+            insertedPages = sourcePages.map((page) => {
+              let nextId = copyPages ? Da() : page.id;
+              idMap.set(page.id, nextId);
+              return { ...page, id: nextId };
+            }),
+            insertedMarks = sourceDocument.marks
+              .filter((mark) => requestedIds.has(mark.pageId))
+              .map((mark) => ({
+                ...mark,
+                id: copyPages ? Da() : mark.id,
+                pageId: idMap.get(mark.pageId) || mark.pageId,
+                crop: { ...mark.crop },
+                points: mark.points?.map((point) => ({ ...point })),
+              })),
+            destinationPages = [...targetDocument.pages],
+            insertionIndex = Ee(targetIndex, 0, destinationPages.length);
+          destinationPages.splice(insertionIndex, 0, ...insertedPages);
+          documents = documents.map((documentItem) => {
+            if (documentItem.id === sourceDocument.id && !copyPages)
+              return {
+                ...documentItem,
+                pages: documentItem.pages.filter((page) => !requestedIds.has(page.id)),
+                marks: documentItem.marks.filter((mark) => !requestedIds.has(mark.pageId)),
+              };
+            if (documentItem.id === targetDocument.id)
+              return {
+                ...documentItem,
+                pages: destinationPages,
+                marks: [...documentItem.marks, ...insertedMarks],
+              };
+            return documentItem;
+          });
+        }
+
+        ((i.current = documents), G(documents));
+        let activeDocument = documents.find((documentItem) => documentItem.id === Q);
+        if (activeDocument) {
+          ((o.current = Wt(activeDocument.pages)),
+            (f.current = Lt(activeDocument.marks)),
+            H(o.current),
+            B(f.current));
+          let selectedPage = activeDocument.pages.find((page) =>
+            payload.pageIds.includes(page.id),
+          ) || activeDocument.pages[0];
+          (Ta(selectedPage?.id || null),
+            ka(new Set(selectedPage ? [selectedPage.id] : [])),
+            De(null));
+        }
+        F(
+          sourceDocument.id === targetDocument.id
+            ? "Páginas reordenadas"
+            : `${sourcePages.length} página${sourcePages.length === 1 ? "" : "s"} ${copyPages ? "copiada" : "movida"}${sourcePages.length === 1 ? "" : "s"}`,
+        );
+      },
+      [Q, F],
+    ),
     el = (n) => {
       Ds((s) =>
         s.map((L) =>
@@ -14294,9 +14428,7 @@ function cs() {
                 color:
                   W === "highlight"
                     ? highlightColor
-                    : W === "whiteout"
-                      ? "#ffffff"
-                      : W === "redact"
+                    : W === "redact"
                         ? redactColor
                         : "#111111",
                 opacity: W === "highlight" ? highlightOpacity : 1,
@@ -14485,26 +14617,37 @@ function cs() {
         (c.current = null),
         As(!1));
     },
-    Ya = (0, I.useCallback)((n) => {
-      Gu((s) =>
-        window.PDF_IGNOVA_TEXT_SELECTION?.nextZoom
-          ? window.PDF_IGNOVA_TEXT_SELECTION.nextZoom(s, n)
-          : Ee(s + (n > 0 ? 10 : -10), 25, 500),
-      );
-    }, []),
-    px = (0, I.useCallback)(() => {
+    fitWidthZoom = (0, I.useCallback)(() => {
       let n = u.current;
-      n && Gu(Ee(Math.floor(((n.clientWidth - 64) / 680) * 100), 25, 500));
+      return n ? Ee(Math.floor(((n.clientWidth - 64) / 680) * 100), 20, 500) : 100;
     }, []),
-    Os = (0, I.useCallback)(() => {
+    fitPageZoom = (0, I.useCallback)(() => {
       let n = u.current;
-      if (!n) return;
+      if (!n) return 82;
       let s = Ye.h / Ye.w,
         L = n.clientWidth - 70,
         y = n.clientHeight - 70,
         A = Math.min(L, y / s);
-      Gu(Ee(Math.floor((A / 680) * 100), 25, 500));
+      return Ee(Math.floor((A / 680) * 100), 20, 500);
     }, [Ye]),
+    Ya = (0, I.useCallback)((n) => {
+      Gu((s) =>
+        window.PDF_IGNOVA_TEXT_SELECTION?.nextViewZoom
+          ? window.PDF_IGNOVA_TEXT_SELECTION.nextViewZoom(
+              s,
+              n,
+              fitPageZoom(),
+              fitWidthZoom(),
+            )
+          : Ee(s + (n > 0 ? 10 : -10), 20, 500),
+      );
+    }, [fitPageZoom, fitWidthZoom]),
+    px = (0, I.useCallback)(() => {
+      Gu(fitWidthZoom());
+    }, [fitWidthZoom]),
+    Os = (0, I.useCallback)(() => {
+      Gu(fitPageZoom());
+    }, [fitPageZoom]),
     mx = (n) => {
       let s = n.currentTarget;
       if ((n.preventDefault(), n.ctrlKey || n.metaKey)) Ya(n.deltaY < 0 ? 10 : -10);
@@ -14637,6 +14780,7 @@ function cs() {
           StandardFonts: L,
           degrees: y,
           rgb: A,
+          BlendMode: blendMode,
         } = await import("./chunks/es-4HSNR7QU.js"),
         k = (he) => {
           let R = he.replace("#", "");
@@ -14751,10 +14895,11 @@ function cs() {
                 (Y.size * oe.width * 1.15) / Ye.w,
               ),
               textColor = k(Y.color),
-              textAngle = Y.angle || 0;
+              textAngle = Y.angle || 0,
+              textOriginY = oe.height - Y.y * oe.height - textSize;
             ne.drawText(Y.text || " ", {
               x: ga,
-              y: Nl,
+              y: textOriginY,
               size: textSize,
               font: textFont,
               color: textColor,
@@ -14773,7 +14918,7 @@ function cs() {
                 if (!line) return;
                 let lineWidth = textFont.widthOfTextAtSize(line, textSize),
                   lineX = ga + sinAngle * textLineHeight * lineIndex,
-                  lineY = Nl - cosAngle * textLineHeight * lineIndex,
+                  lineY = textOriginY - cosAngle * textLineHeight * lineIndex,
                   startX = lineX + sinAngle * underlineOffset,
                   startY = lineY - cosAngle * underlineOffset;
                 ne.drawLine({
@@ -14818,6 +14963,8 @@ function cs() {
               color: k(Y.color),
               opacity:
                 Y.type === "highlight" ? (Y.opacity ?? 0.38) : (Y.opacity ?? 1),
+              blendMode:
+                Y.type === "highlight" ? blendMode?.Multiply : void 0,
             });
         }
         if (n && he.id === $?.id) {
@@ -14869,14 +15016,27 @@ function cs() {
       if (w.length) {
         pa("Creando PDF\u2026");
         try {
-          (rs(
-            await Sn(),
-            n.toLowerCase().endsWith(".pdf") ? n : `${n}.pdf`,
-            "application/pdf",
-          ),
-            F("PDF guardado"));
+          let pdfBytes = await Sn(),
+            fileName = n.toLowerCase().endsWith(".pdf") ? n : `${n}.pdf`;
+          if (typeof window.pdfEstudio?.savePdfAs === "function") {
+            let result = await window.pdfEstudio.savePdfAs(
+              pdfBytes.buffer.slice(
+                pdfBytes.byteOffset,
+                pdfBytes.byteOffset + pdfBytes.byteLength,
+              ),
+              fileName,
+            );
+            if (result?.canceled) {
+              pa("");
+              return;
+            }
+            if (!result?.ok) throw new Error("No se pudo guardar el PDF");
+            F(`PDF guardado como ${result.fileName || fileName}`);
+          } else {
+            (rs(pdfBytes, fileName, "application/pdf"), F("PDF guardado"));
+          }
         } catch (s) {
-          (console.error(s), F("No se pudo generar el PDF"));
+          (console.error(s), F("No se pudo guardar el PDF"));
         }
         pa("");
       }
@@ -15540,6 +15700,7 @@ function cs() {
           textDecoration: n.underline ? "underline" : "none",
           opacity:
             n.type === "highlight" ? (n.opacity ?? 0.38) : (n.opacity ?? 1),
+          mixBlendMode: n.type === "highlight" ? "multiply" : void 0,
           transform: n.type === "watermark" ? `rotate(${n.angle || 0}deg)` : void 0,
         },
         onPointerDown:
@@ -15566,6 +15727,14 @@ function cs() {
                   className: "text-editor",
                   contentEditable: !0,
                   suppressContentEditableWarning: !0,
+                  spellCheck: !1,
+                  style: {
+                    color: n.color,
+                    fontFamily: n.font,
+                    fontWeight: n.bold ? 700 : 400,
+                    fontStyle: n.italic ? "italic" : "normal",
+                    textDecoration: n.underline ? "underline" : "none",
+                  },
                   onPointerDown: (y) => {
                     W !== "draw" && (y.stopPropagation(), De(n.id));
                   },
@@ -15577,8 +15746,14 @@ function cs() {
                         ?.classList.add("pdf-text-live-edit"));
                   },
                   onBlur: (y) => {
-                    let A = y.currentTarget.textContent || "",
-                      k = y.currentTarget.dataset.pdfTextUserEdited === "1";
+                    let A = (y.currentTarget.innerText || "").replace(/\r/g, ""),
+                      k = y.currentTarget.dataset.pdfTextUserEdited === "1",
+                      lineCount = Math.max(1, A.split("\n").length),
+                      minimumHeight = Ee(
+                        (lineCount * n.size * 1.2 + 4) / Math.max(Ye.h, 1),
+                        0.025,
+                        1 - n.y,
+                      );
                     if (
                       (y.currentTarget
                       .closest(".mark")
@@ -15591,6 +15766,7 @@ function cs() {
                     }
                     ma(n.id, {
                       text: A,
+                      h: Math.max(n.h, minimumHeight),
                       textDirty: n.replaceOriginal
                         ? A !== (n.sourceText || "")
                         : !0,
@@ -15633,7 +15809,128 @@ function cs() {
       },
       n.id,
     );
-  };
+  },
+    renderOrganizerPanel = (documentItem, panelLabel, targetSelector = !1) =>
+      (0, d.jsxs)(
+        "section",
+        {
+          className: "dual-document-panel",
+          children: [
+            (0, d.jsxs)("header", {
+              children: [
+                (0, d.jsxs)("div", {
+                  children: [
+                    (0, d.jsx)("small", { children: panelLabel }),
+                    (0, d.jsx)("strong", { children: documentItem.name }),
+                  ],
+                }),
+                targetSelector
+                  ? (0, d.jsx)("select", {
+                      value: documentItem.id,
+                      onChange: (event) => ms(event.target.value),
+                      children: O.filter((item) => item.id !== Q).map((item) =>
+                        (0, d.jsx)(
+                          "option",
+                          { value: item.id, children: item.name },
+                          item.id,
+                        ),
+                      ),
+                    })
+                  : (0, d.jsx)("span", {
+                      children: `${documentItem.pages.length} páginas`,
+                    }),
+              ],
+            }),
+            (0, d.jsx)("div", {
+              className: "dual-page-grid",
+              onDragOver: (event) => event.preventDefault(),
+              onDrop: (event) =>
+                transferPagesBetweenPanels(
+                  event,
+                  documentItem.id,
+                  documentItem.pages.length,
+                ),
+              children: [
+                ...documentItem.pages.map((page, pageIndex) => {
+                  let source = g.find((item) => item.id === page.docId),
+                    isActive = documentItem.id === Q && page.id === $t;
+                  return (0, d.jsxs)(
+                    "article",
+                    {
+                      draggable: !0,
+                      className: `dual-page-card ${isActive ? "active" : ""}`,
+                      onDragStart: (event) => {
+                        let pageIds =
+                          documentItem.id === Q && ue.has(page.id)
+                            ? [...ue]
+                            : [page.id];
+                        (event.dataTransfer.setData(
+                          "application/x-pdf-ignova-pages",
+                          JSON.stringify({
+                            documentId: documentItem.id,
+                            pageIds,
+                            copy: event.ctrlKey || event.metaKey,
+                          }),
+                        ),
+                          (event.dataTransfer.effectAllowed = "copyMove"));
+                      },
+                      onDragOver: (event) => event.preventDefault(),
+                      onDrop: (event) =>
+                        transferPagesBetweenPanels(
+                          event,
+                          documentItem.id,
+                          pageIndex,
+                        ),
+                      onClick: () => {
+                        if (documentItem.id === Q) {
+                          (Ta(page.id), ka(new Set([page.id])));
+                        } else {
+                          lx(documentItem.id);
+                          setDualPanelOpen(!0);
+                          setTimeout(() => {
+                            (Ta(page.id), ka(new Set([page.id])));
+                          }, 0);
+                        }
+                      },
+                      children: [
+                        (0, d.jsx)("div", {
+                          className: "dual-page-canvas",
+                          children: (0, d.jsx)(qh, {
+                            source,
+                            page,
+                            width: 150,
+                          }),
+                        }),
+                        (0, d.jsxs)("span", {
+                          children: [
+                            (0, d.jsx)("b", { children: pageIndex + 1 }),
+                            (0, d.jsx)("small", {
+                              children: source?.name || documentItem.name,
+                            }),
+                          ],
+                        }),
+                      ],
+                    },
+                    page.id,
+                  );
+                }),
+                (0, d.jsx)("div", {
+                  className: "dual-drop-end",
+                  onDragOver: (event) => event.preventDefault(),
+                  onDrop: (event) =>
+                    transferPagesBetweenPanels(
+                      event,
+                      documentItem.id,
+                      documentItem.pages.length,
+                    ),
+                  children: "Suelta aquí para añadir al final",
+                }),
+              ],
+            }),
+          ],
+        },
+        documentItem.id,
+      );
   return (0, d.jsxs)("main", {
     className: "app",
     onClick: () => ea && Xa(null),
@@ -15780,17 +16077,36 @@ function cs() {
               ),
             ],
           }),
+          (0, d.jsxs)("div", {
+            className: "panel-mode-switch",
+            "aria-label": "Vista de documentos",
+            children: [
+              (0, d.jsx)("button", {
+                type: "button",
+                className: dualPanelOpen ? "" : "active",
+                onClick: () => setDualPanelOpen(!1),
+                children: "1 panel",
+              }),
+              (0, d.jsx)("button", {
+                type: "button",
+                className: dualPanelOpen ? "active" : "",
+                onClick: () => {
+                  if (O.length < 2) {
+                    F("Abre un segundo PDF para usar dos paneles");
+                    return;
+                  }
+                  setDualPanelOpen(!0);
+                },
+                children: "2 paneles",
+              }),
+            ],
+          }),
           (0, d.jsxs)("button", {
             className: "new",
             onClick: () => Jx("open"),
             children: [(0, d.jsx)(rf, { size: 16 }), " Abrir / convertir"],
           }),
           (0, d.jsx)("span", { className: "spacer" }),
-          (0, d.jsx)("small", { children: "Procesamiento local" }),
-          (0, d.jsxs)("span", {
-            className: "desktop-badge",
-            children: [(0, d.jsx)(nf, { size: 16 }), " Programa de escritorio"],
-          }),
         ],
       }),
       (0, d.jsxs)("nav", {
@@ -16716,7 +17032,7 @@ function cs() {
                     onClick: () => Me("redact"),
                     children: [
                       (0, d.jsx)(mf, { size: 17 }),
-                      (0, d.jsx)("span", { children: "Tapado negro" }),
+                      (0, d.jsx)("span", { children: "Tapado" }),
                     ],
                   }),
                   W === "redact" &&
@@ -16735,14 +17051,6 @@ function cs() {
                         ],
                       }),
                     }),
-                  (0, d.jsxs)("button", {
-                    className: W === "whiteout" ? "active" : "",
-                    onClick: () => Me("whiteout"),
-                    children: [
-                      (0, d.jsx)(lf, { size: 17 }),
-                      (0, d.jsx)("span", { children: "Tapado blanco" }),
-                    ],
-                  }),
                   (0, d.jsx)("i", {}),
                   (0, d.jsxs)("button", {
                     onClick: () => Qu(),
@@ -16801,14 +17109,77 @@ function cs() {
               }),
               (0, d.jsx)("div", {
                 ref: u,
-                className: `stage ${W === "hand" ? "hand" : ""} ${Wh ? "panning" : ""}`,
+                className: `stage ${W === "hand" ? "hand" : ""} ${Wh ? "panning" : ""} ${Cf <= 35 ? "overview-stage" : ""} ${dualPanelOpen ? "dual-stage" : ""}`,
                 onWheel: mx,
-                onPointerDown: sx,
-                onPointerMove: cx,
-                onPointerUp: Rs,
-                onPointerCancel: Rs,
+                onPointerDown: dualPanelOpen || Cf <= 35 ? void 0 : sx,
+                onPointerMove: dualPanelOpen || Cf <= 35 ? void 0 : cx,
+                onPointerUp: dualPanelOpen || Cf <= 35 ? void 0 : Rs,
+                onPointerCancel: dualPanelOpen || Cf <= 35 ? void 0 : Rs,
                 children: w.length
-                  ? $ &&
+                  ? dualPanelOpen && O.length > 1 && pn && mn
+                    ? (0, d.jsxs)("div", {
+                        className: "dual-organizer",
+                        children: [
+                          (0, d.jsxs)("div", {
+                            className: "dual-organizer-help",
+                            children: [
+                              (0, d.jsx)("strong", {
+                                children: "Organizar entre dos PDF",
+                              }),
+                              (0, d.jsx)("span", {
+                                children:
+                                  "Arrastra páginas de un panel al otro. Mantén Ctrl o ⌘ para copiar en vez de mover.",
+                              }),
+                            ],
+                          }),
+                          (0, d.jsx)("div", {
+                            className: "dual-organizer-columns",
+                            children: [
+                              renderOrganizerPanel(
+                                { ...pn, pages: w, marks: T },
+                                "PDF activo",
+                              ),
+                              renderOrganizerPanel(mn, "Segundo PDF", !0),
+                            ],
+                          }),
+                        ],
+                      })
+                    : Cf <= 35
+                      ? (0, d.jsx)("div", {
+                          className: "page-overview-strip",
+                          children: w.map((page, pageIndex) => {
+                            let source = g.find((item) => item.id === page.docId);
+                            return (0, d.jsxs)(
+                              "article",
+                              {
+                                draggable: !0,
+                                className: `overview-page ${page.id === $t ? "active" : ""}`,
+                                onDragStart: () => Lf(page.id),
+                                onDragEnd: () => Lf(null),
+                                onDragOver: (event) => event.preventDefault(),
+                                onDrop: (event) => {
+                                  (event.stopPropagation(), fx(page.id));
+                                },
+                                onClick: () => {
+                                  (Ta(page.id), ka(new Set([page.id])));
+                                },
+                                children: [
+                                  (0, d.jsx)("div", {
+                                    className: "overview-page-canvas",
+                                    children: (0, d.jsx)(qh, {
+                                      source,
+                                      page,
+                                      width: Math.round((680 * Cf) / 100),
+                                    }),
+                                  }),
+                                  (0, d.jsx)("b", { children: pageIndex + 1 }),
+                                ],
+                              },
+                              page.id,
+                            );
+                          }),
+                        })
+                      : $ &&
                     (0, d.jsxs)("div", {
                       className: `pagestage ${["text", "highlight", "redact", "whiteout", "paste", "draw", "ocr-region"].includes(W) ? "cross" : ""}`,
                       style: { width: Math.round((680 * Cf) / 100) },
@@ -16919,8 +17290,16 @@ onContextMenu:gx,onPointerDown:ix,
                   (0, d.jsxs)("div", {
                     children: [
                       (0, d.jsx)("input", {
-                        value: w.length ? Ue + 1 : 0,
-                        onChange: (n) => Hl(+n.target.value - 1),
+                        type: "number",
+                        min: w.length ? "1" : "0",
+                        max: String(Math.max(0, w.length)),
+                        value: pageNumberDraft,
+                        onChange: (n) => setPageNumberDraft(n.target.value),
+                        onBlur: commitPageNumber,
+                        onKeyDown: (n) => {
+                          n.key === "Enter" && (n.preventDefault(), commitPageNumber());
+                        },
+                        title: "Escribe un número y pulsa Intro",
                       }),
                       (0, d.jsxs)("span", { children: ["de ", w.length] }),
                     ],
@@ -16933,7 +17312,7 @@ onContextMenu:gx,onPointerDown:ix,
                       }),
                       (0, d.jsx)("input", {
                         type: "range",
-                        min: "25",
+                        min: "20",
                         max: "500",
                         value: Cf,
                         onChange: (n) => Gu(+n.target.value),
@@ -16983,13 +17362,23 @@ onContextMenu:gx,onPointerDown:ix,
                               (0, d.jsx)("textarea", {
                                 value: U.text,
                                 onFocus: Te,
-                                onChange: (n) =>
+                                onChange: (n) => {
+                                  let nextText = n.target.value,
+                                    lineCount = Math.max(1, nextText.split("\n").length),
+                                    minimumHeight = Ee(
+                                      (lineCount * U.size * 1.2 + 4) /
+                                        Math.max(Ye.h, 1),
+                                      0.025,
+                                      1 - U.y,
+                                    );
                                   ma(U.id, {
-                                    text: n.target.value,
+                                    text: nextText,
+                                    h: Math.max(U.h, minimumHeight),
                                     textDirty: U.replaceOriginal
-                                      ? n.target.value !== (U.sourceText || "")
+                                      ? nextText !== (U.sourceText || "")
                                       : !0,
-                                  }),
+                                  });
+                                },
                               }),
                               (0, d.jsx)("label", {
                                 children: "Tipo de letra",
@@ -17320,6 +17709,7 @@ onContextMenu:gx,onPointerDown:ix,
                                             "#ffb35c",
                                           ]
                                         : [
+                                            "#ffffff",
                                             "#111111",
                                             "#e02b3a",
                                             "#1268e8",
@@ -17408,8 +17798,20 @@ onContextMenu:gx,onPointerDown:ix,
                         (0, d.jsxs)("div", {
                           className: "pageno",
                           children: [
-                            (0, d.jsx)("b", {
-                              children: w.length ? Ue + 1 : "\u2014",
+                            (0, d.jsx)("input", {
+                              className: "page-number-input",
+                              type: "number",
+                              min: w.length ? "1" : "0",
+                              max: String(Math.max(0, w.length)),
+                              value: pageNumberDraft,
+                              disabled: !w.length,
+                              onChange: (n) => setPageNumberDraft(n.target.value),
+                              onBlur: commitPageNumber,
+                              onKeyDown: (n) => {
+                                n.key === "Enter" &&
+                                  (n.preventDefault(), commitPageNumber());
+                              },
+                              "aria-label": "Ir a la página",
                             }),
                             (0, d.jsxs)("span", {
                               children: ["de ", w.length],
@@ -17506,10 +17908,27 @@ onContextMenu:gx,onPointerDown:ix,
                     }),
                   ],
                 }),
-                (0, d.jsx)("p", {
-                  className: "privacy",
-                  children:
-                    "Tus documentos se procesan en este dispositivo y no se guardan en un servidor.",
+                (0, d.jsxs)("section", {
+                  className: "system-information",
+                  children: [
+                    (0, d.jsx)("label", { children: "Aplicación" }),
+                    (0, d.jsx)("span", {
+                      className: "local-badge",
+                      children: "Procesamiento local",
+                    }),
+                    (0, d.jsxs)("span", {
+                      className: "desktop-badge",
+                      children: [
+                        (0, d.jsx)(nf, { size: 16 }),
+                        " Programa de escritorio",
+                      ],
+                    }),
+                    (0, d.jsx)("p", {
+                      className: "privacy",
+                      children:
+                        "Tus documentos se procesan en este dispositivo y no se guardan en un servidor.",
+                    }),
+                  ],
                 }),
               ],
             }),

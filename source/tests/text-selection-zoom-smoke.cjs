@@ -16,8 +16,12 @@ assert.equal(helpers.nextZoom(82, 1), 100);
 assert.equal(helpers.nextZoom(240, 1), 250);
 assert.equal(helpers.nextZoom(400, 1), 500);
 assert.equal(helpers.nextZoom(500, 1), 500);
-assert.equal(helpers.nextZoom(25, -1), 25);
+assert.equal(helpers.nextZoom(20, -1), 20);
 assert.equal(helpers.clampZoom(900), 500);
+assert.equal(helpers.nextViewZoom(20, 1, 64, 112), 64);
+assert.equal(helpers.nextViewZoom(64, 1, 64, 112), 112);
+assert.equal(helpers.nextViewZoom(112, 1, 64, 112), 125);
+assert.equal(helpers.nextViewZoom(112, -1, 64, 112), 64);
 
 const layer = {
   nodeType: 1,
@@ -59,6 +63,8 @@ assert.match(editor, /Copiar texto seleccionado/);
 assert.match(editor, /Seleccionar texto/);
 assert.match(editor, /readPdfSelection/);
 assert.match(editor, /max: "500"/);
+assert.match(editor, /min: "20"/);
+assert.match(editor, /page-overview-strip/);
 assert.match(css, /\.pdf-text-hit::selection/);
 
 console.log("native text selection and extended zoom smoke test passed");

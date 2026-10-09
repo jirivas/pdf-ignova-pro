@@ -6,10 +6,10 @@
   "use strict";
 
   const PDF_TEXT_LAYER_SELECTOR = ".pdf-text-layer";
-  const MIN_ZOOM = 25;
+  const MIN_ZOOM = 20;
   const MAX_ZOOM = 500;
   const ZOOM_STEPS = Object.freeze([
-    25, 33, 50, 67, 75, 82, 100, 125, 150, 175, 200, 250, 300, 400, 500,
+    20, 50, 82, 100, 125, 150, 175, 200, 250, 300, 400, 500,
   ]);
 
   function normalizeSelectedText(value) {
@@ -67,6 +67,26 @@
     return current;
   }
 
+  function nextViewZoom(value, direction, fitPageZoom, fitWidthZoom) {
+    const current = clampZoom(value);
+    const pageZoom = clampZoom(fitPageZoom);
+    const widthZoom = clampZoom(fitWidthZoom);
+    const semanticMaximum = Math.max(pageZoom, widthZoom);
+    const viewSteps = [...new Set([
+      MIN_ZOOM,
+      pageZoom,
+      widthZoom,
+      ...ZOOM_STEPS.filter((step) => step > semanticMaximum),
+    ])].sort((left, right) => left - right);
+    if (direction > 0) {
+      return viewSteps.find((step) => step > current) || MAX_ZOOM;
+    }
+    if (direction < 0) {
+      return [...viewSteps].reverse().find((step) => step < current) || MIN_ZOOM;
+    }
+    return current;
+  }
+
   return Object.freeze({
     PDF_TEXT_LAYER_SELECTOR,
     MIN_ZOOM,
@@ -76,5 +96,6 @@
     readPdfSelection,
     clampZoom,
     nextZoom,
+    nextViewZoom,
   });
 });
