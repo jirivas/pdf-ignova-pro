@@ -13422,6 +13422,7 @@ function cs() {
     c = (0, I.useRef)(null),
     ocrDrag = (0, I.useRef)(null),
     searchRequest = (0, I.useRef)(0),
+    saveDialogInProgress = (0, I.useRef)(!1),
     [g, S] = (0, I.useState)([]),
     [w, H] = (0, I.useState)([]),
     [T, B] = (0, I.useState)([]),
@@ -13447,8 +13448,6 @@ function cs() {
     [rn, Gh] = (0, I.useState)(""),
     [searchResults, setSearchResults] = (0, I.useState)([]),
     [currentSearchIndex, setCurrentSearchIndex] = (0, I.useState)(-1),
-    [_h, Bl] = (0, I.useState)(!1),
-    [sn, ys] = (0, I.useState)("documento_editado.pdf"),
     [Vh, Rl] = (0, I.useState)(!1),
     [_u, Xh] = (0, I.useState)(""),
     [Vu, Yh] = (0, I.useState)(null),
@@ -15013,7 +15012,8 @@ function cs() {
       return _.save();
     },
     vn = async (n) => {
-      if (w.length) {
+      if (w.length && !saveDialogInProgress.current) {
+        saveDialogInProgress.current = !0;
         pa("Creando PDF\u2026");
         try {
           let pdfBytes = await Sn(),
@@ -15037,20 +15037,20 @@ function cs() {
           }
         } catch (s) {
           (console.error(s), F("No se pudo guardar el PDF"));
+        } finally {
+          saveDialogInProgress.current = !1;
+          pa("");
         }
-        pa("");
       }
     },
     vf = async () =>
       vn(
         pn?.name.replace(/\.pdf$/i, "_editado.pdf") || "documento_editado.pdf",
       ),
-    xx = () => {
-      (ys(
+    xx = () =>
+      vn(
         pn?.name.replace(/\.pdf$/i, "_editado.pdf") || "documento_editado.pdf",
       ),
-        Bl(!0));
-    },
     Lx = async () => {
       if (w.length) {
         let printPageIndexes = await chooseExportPageIndexes("Imprimir");
@@ -16251,25 +16251,6 @@ function cs() {
                       }),
                     ],
                   }),
-                  (0, d.jsx)("hr", {}),
-                  (0, d.jsxs)("button", {
-                    onClick: () => Me("text"),
-                    children: [(0, d.jsx)(Al, {}), "A\xF1adir y editar texto"],
-                  }),
-                  (0, d.jsxs)("button", {
-                    onClick: () => Me("draw"),
-                    children: [(0, d.jsx)(Il, {}), "Escribir a mano alzada"],
-                  }),
-                  (0, d.jsxs)("button", {
-                    onClick: () => Qu(),
-                    disabled: !$,
-                    children: [(0, d.jsx)(xt, {}), "Insertar imagen"],
-                  }),
-                  (0, d.jsxs)("button", {
-                    onClick: () => Me("paste"),
-                    disabled: !$,
-                    children: [(0, d.jsx)(ht, {}), "Pegar imagen"],
-                  }),
                 ],
               }),
             ],
@@ -16347,6 +16328,63 @@ function cs() {
                         }),
                       ],
                     }),
+                ],
+              }),
+            ],
+          }),
+          (0, d.jsxs)("div", {
+            className: "viewmenu drawing-menu",
+            children: [
+              (0, d.jsxs)("button", {
+                children: [
+                  (0, d.jsx)(Il, { size: 16 }),
+                  "Dibujo",
+                  (0, d.jsx)(gt, { size: 13 }),
+                ],
+              }),
+              (0, d.jsxs)("div", {
+                className: "viewmenu-panel",
+                children: [
+                  (0, d.jsxs)("button", {
+                    onClick: () => Me("text"),
+                    children: [(0, d.jsx)(Al, {}), "A\xF1adir y editar texto"],
+                  }),
+                  (0, d.jsxs)("button", {
+                    onClick: () => Me("draw"),
+                    children: [(0, d.jsx)(Il, {}), "Escribir a mano alzada"],
+                  }),
+                  (0, d.jsxs)("button", {
+                    onClick: () => Me("highlight"),
+                    children: [(0, d.jsx)(of, {}), "Resaltar"],
+                  }),
+                  (0, d.jsxs)("button", {
+                    className: W === "redact" ? "active" : "",
+                    onClick: () => Me("redact"),
+                    children: [(0, d.jsx)(mf, {}), "Tapado"],
+                  }),
+                  (0, d.jsxs)("label", {
+                    className: "drawing-menu-color",
+                    title: "Color del tapado",
+                    children: [
+                      (0, d.jsx)("span", { children: "Color del tapado" }),
+                      (0, d.jsx)("input", {
+                        type: "color",
+                        value: redactColor,
+                        onChange: (n) => setRedactColor(n.target.value),
+                      }),
+                    ],
+                  }),
+                  (0, d.jsx)("hr", {}),
+                  (0, d.jsxs)("button", {
+                    onClick: () => Qu(),
+                    disabled: !$,
+                    children: [(0, d.jsx)(xt, {}), "Insertar imagen"],
+                  }),
+                  (0, d.jsxs)("button", {
+                    onClick: () => Me("paste"),
+                    disabled: !$,
+                    children: [(0, d.jsx)(ht, {}), "Pegar imagen"],
+                  }),
                 ],
               }),
             ],
@@ -17026,30 +17064,6 @@ function cs() {
                           ],
                         }),
                       ],
-                    }),
-                  (0, d.jsxs)("button", {
-                    className: W === "redact" ? "active" : "",
-                    onClick: () => Me("redact"),
-                    children: [
-                      (0, d.jsx)(mf, { size: 17 }),
-                      (0, d.jsx)("span", { children: "Tapado" }),
-                    ],
-                  }),
-                  W === "redact" &&
-                    (0, d.jsx)("div", {
-                      className: "mark-controls",
-                      "data-toolbar-owner": "redact",
-                      children: (0, d.jsxs)("label", {
-                        title: "Color del tapado",
-                        children: [
-                          "Color",
-                          (0, d.jsx)("input", {
-                            type: "color",
-                            value: redactColor,
-                            onChange: (n) => setRedactColor(n.target.value),
-                          }),
-                        ],
-                      }),
                     }),
                   (0, d.jsx)("i", {}),
                   (0, d.jsxs)("button", {
@@ -18144,49 +18158,6 @@ onContextMenu:gx,onPointerDown:ix,
                     onClick: insertOcrRegionText,
                     disabled: !ocrRegionResult.trim(),
                     children: "Insertar como texto",
-                  }),
-                ],
-              }),
-            ],
-          }),
-        }),
-      _h &&
-        (0, d.jsx)("div", {
-          className: "modalback",
-          onClick: () => Bl(!1),
-          children: (0, d.jsxs)("div", {
-            className: "smallmodal",
-            onClick: (n) => n.stopPropagation(),
-            children: [
-              (0, d.jsx)("button", {
-                className: "modalx",
-                onClick: () => Bl(!1),
-                children: "\xD7",
-              }),
-              (0, d.jsx)("h2", { children: "Guardar como" }),
-              (0, d.jsx)("label", { children: "Nombre del archivo" }),
-              (0, d.jsx)("input", {
-                autoFocus: !0,
-                value: sn,
-                onChange: (n) => ys(n.target.value),
-                onKeyDown: (n) => {
-                  n.key === "Enter" && (Bl(!1), vn(sn));
-                },
-              }),
-              (0, d.jsxs)("div", {
-                className: "modalactions",
-                children: [
-                  (0, d.jsx)("button", {
-                    className: "shortcut",
-                    onClick: () => Bl(!1),
-                    children: "Cancelar",
-                  }),
-                  (0, d.jsxs)("button", {
-                    className: "blue",
-                    onClick: () => {
-                      (Bl(!1), vn(sn));
-                    },
-                    children: [(0, d.jsx)(Hu, { size: 16 }), "Guardar"],
                   }),
                 ],
               }),

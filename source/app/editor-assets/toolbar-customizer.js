@@ -12,8 +12,6 @@
     "text",
     "draw",
     "highlight",
-    "redact",
-    "whiteout",
     "image",
     "paste",
     "rotate-left",
@@ -33,8 +31,6 @@
     text: "Texto",
     draw: "Mano alzada",
     highlight: "Resaltar",
-    redact: "Tapado negro",
-    whiteout: "Tapado blanco",
     image: "Imagen",
     paste: "Pegar imagen",
     "rotate-left": "Girar a la izquierda",
@@ -117,8 +113,6 @@
     else if (equalsTranslation(text, "Texto")) id = "text";
     else if (equalsTranslation(text, "Mano alzada")) id = "draw";
     else if (equalsTranslation(text, "Resaltar")) id = "highlight";
-    else if (equalsTranslation(text, "Tapado negro")) id = "redact";
-    else if (equalsTranslation(text, "Tapado blanco")) id = "whiteout";
     else if (equalsTranslation(text, "Imagen")) id = "image";
     else if (equalsTranslation(text, "Pegar")) id = "paste";
     else if (equalsTranslation(text, "Propiedades")) id = "properties";

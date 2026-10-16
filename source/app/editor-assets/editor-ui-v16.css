@@ -349,6 +349,37 @@
   accent-color: #1268e8;
 }
 
+.drawing-menu .viewmenu-panel button.active {
+  background: #e8f1ff;
+  color: #075acb;
+  font-weight: 700;
+}
+
+.drawing-menu-color {
+  min-height: 39px;
+  margin: 3px 2px 5px;
+  padding: 6px 9px 6px 37px;
+  border: 1px solid #dfe3e9;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #555d68;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 10px;
+}
+
+.drawing-menu-color input[type="color"] {
+  width: 36px;
+  height: 27px;
+  padding: 2px;
+  border: 1px solid #c7ccd4;
+  border-radius: 5px;
+  background: #fff;
+  cursor: pointer;
+}
+
 .mark-color-options {
   display: flex;
   align-items: center;
@@ -657,7 +688,7 @@
   }
 }
 
-/* Organización y edición 1.9.9 */
+/* Organización y edición 1.9.10 */
 .panel-mode-switch {
   flex: 0 0 auto;
   display: flex;

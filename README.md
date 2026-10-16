@@ -4,9 +4,9 @@ PDF Ignova Pro is an Open Source Windows and macOS desktop application for profe
 
 ## Current public release
 
-**1.9.9** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
+**1.9.10** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
 
-The 1.9.9 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.10 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 
@@ -46,7 +46,7 @@ The source-code license does not grant permission to present modified or third-p
 
 The complete, browsable application source is in [`source/`](source/), including the Electron application, interface, OCR and conversion helpers, tests, Windows installer definition and macOS files.
 
-The official Windows and macOS workflows build directly from this visible directory. [`PDF_Ignova_Pro_1.9.9_Codigo_Fuente_GPLv3.zip`](PDF_Ignova_Pro_1.9.9_Codigo_Fuente_GPLv3.zip) is retained only as a convenient downloadable snapshot of the same 1.9.9 source.
+The official Windows and macOS workflows build directly from this visible directory. [`PDF_Ignova_Pro_1.9.10_Codigo_Fuente_GPLv3.zip`](PDF_Ignova_Pro_1.9.10_Codigo_Fuente_GPLv3.zip) is retained only as a convenient downloadable snapshot of the same 1.9.10 source.
 
 To run the cross-platform source checks locally:
 

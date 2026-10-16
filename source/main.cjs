@@ -626,21 +626,43 @@ function suggestedSavedPdfName(documentName) {
 }
 
 async function writeFileSafely(outputPath, bytes) {
+  const uniqueSuffix = `${process.pid}.${Date.now()}`;
   const temporaryPath = path.join(
     path.dirname(outputPath),
-    `.${path.basename(outputPath)}.${process.pid}.${Date.now()}.tmp`,
+    `.${path.basename(outputPath)}.${uniqueSuffix}.tmp`,
   );
+  const backupPath = path.join(
+    path.dirname(outputPath),
+    `.${path.basename(outputPath)}.${uniqueSuffix}.bak`,
+  );
+  let originalMoved = false;
   try {
     await fsp.writeFile(temporaryPath, bytes, { flag: "wx" });
     try {
       await fsp.rename(temporaryPath, outputPath);
     } catch (error) {
       if (!(["EEXIST", "EPERM", "EACCES"].includes(error?.code))) throw error;
-      await fsp.rm(outputPath, { force: true });
-      await fsp.rename(temporaryPath, outputPath);
+      await fsp.rename(outputPath, backupPath);
+      originalMoved = true;
+      try {
+        await fsp.rename(temporaryPath, outputPath);
+      } catch (replacementError) {
+        try {
+          await fsp.rename(backupPath, outputPath);
+          originalMoved = false;
+        } catch {
+          // The outer recovery block makes one last restore attempt.
+        }
+        throw replacementError;
+      }
+      await fsp.rm(backupPath, { force: true }).catch(() => {});
+      originalMoved = false;
     }
   } catch (error) {
     await fsp.rm(temporaryPath, { force: true }).catch(() => {});
+    if (originalMoved) {
+      await fsp.rename(backupPath, outputPath).catch(() => {});
+    }
     throw error;
   }
 }
@@ -655,24 +677,38 @@ ipcMain.handle("save-pdf-as", async (event, pdfArrayBuffer, documentName) => {
     : Buffer.from(pdfArrayBuffer.buffer, pdfArrayBuffer.byteOffset, pdfArrayBuffer.byteLength);
   if (!pdfBuffer.length) throw new Error(text.emptyDocument);
 
-  const owner = BrowserWindow.fromWebContents(event.sender);
+  const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  const owner = senderWindow && !senderWindow.isDestroyed()
+    ? senderWindow
+    : BrowserWindow.getFocusedWindow();
   const saveOptions = {
     title: text.saveTitle,
     defaultPath: path.join(app.getPath("documents"), suggestedSavedPdfName(documentName)),
     filters: [{ name: text.pdfFilter, extensions: ["pdf"] }],
     properties: ["showOverwriteConfirmation", "createDirectory"],
   };
+  if (owner && !owner.isDestroyed()) {
+    if (owner.isMinimized()) owner.restore();
+    owner.focus();
+  }
   const saveResult = owner && !owner.isDestroyed()
     ? await dialog.showSaveDialog(owner, saveOptions)
     : await dialog.showSaveDialog(saveOptions);
   if (saveResult.canceled || !saveResult.filePath) {
+    if (owner && !owner.isDestroyed()) owner.focus();
     return { ok: false, canceled: true };
   }
   const outputPath = saveResult.filePath.toLowerCase().endsWith(".pdf")
     ? saveResult.filePath
     : `${saveResult.filePath}.pdf`;
   await writeFileSafely(outputPath, pdfBuffer);
-  return { ok: true, canceled: false, fileName: path.basename(outputPath) };
+  if (owner && !owner.isDestroyed()) owner.focus();
+  return {
+    ok: true,
+    canceled: false,
+    fileName: path.basename(outputPath),
+    filePath: outputPath,
+  };
 });
 
 async function showPrintDestination(owner, language) {

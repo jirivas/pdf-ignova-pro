@@ -43,6 +43,7 @@
     ["Archivo", "File", "Ficheiro", "Datei", "Fichier", "文件", "Fail"],
     ["Inicio", "Home", "Início", "Start", "Accueil", "主页", "Laman utama"],
     ["Editar", "Edit", "Editar", "Bearbeiten", "Modifier", "编辑", "Edit"],
+    ["Dibujo", "Draw", "Desenho", "Zeichnen", "Dessin", "绘图", "Lukisan"],
     ["Seleccionar texto", "Select text", "Selecionar texto", "Text auswählen", "Sélectionner du texte", "选择文本", "Pilih teks"],
     ["Copiar texto seleccionado", "Copy selected text", "Copiar texto selecionado", "Ausgewählten Text kopieren", "Copier le texte sélectionné", "复制所选文本", "Salin teks dipilih"],
     ["Arrastrar", "Drag", "Arrastar", "Ziehen", "Faire glisser", "拖动", "Seret"],

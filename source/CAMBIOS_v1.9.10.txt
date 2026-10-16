@@ -1,0 +1,14 @@
+PDF IGNOVA PRO 1.9.10 — CAMBIOS
+
+- «Guardar como» abre directamente el selector nativo del sistema, unido a la
+  ventana activa del documento. Se elimina el cuadro intermedio que podía
+  perder el foco al cerrarse el menú Archivo.
+- Se bloquean aperturas duplicadas del diálogo mientras hay un guardado en
+  curso.
+- Al sustituir un PDF existente, el archivo anterior se conserva como copia de
+  recuperación hasta que el nuevo archivo queda escrito correctamente.
+- «Tapado» desaparece de la barra superior y pasa al nuevo menú «Dibujo».
+- El menú «Dibujo» agrupa texto, mano alzada, resaltado, tapado, inserción y
+  pegado de imágenes. «Tapado» conserva su selector de color.
+- La personalización de la barra ya no ofrece los antiguos botones de tapado.
+

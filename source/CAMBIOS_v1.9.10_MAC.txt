@@ -1,0 +1,13 @@
+PDF IGNOVA PRO 1.9.10 — EDICIÓN PARA macOS
+
+- Incluye las correcciones de guardado y organización del menú Dibujo de la
+  versión 1.9.10.
+- «Guardar como» abre directamente el cuadro nativo de macOS ligado a la
+  ventana del documento y conserva la extensión PDF.
+- La sustitución segura protege el archivo anterior hasta completar la nueva
+  escritura.
+- «Tapado» se encuentra en el menú «Dibujo», con selector de color.
+- Se mantiene la aplicación universal para Apple Silicon e Intel, el OCR local
+  mediante Vision y la compatibilidad con macOS 12 o posterior.
+- El DMG continúa firmado de forma ad hoc y no está notarizado por Apple.
+
