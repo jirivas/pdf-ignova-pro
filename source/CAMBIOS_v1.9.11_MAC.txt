@@ -1,0 +1,12 @@
+PDF IGNOVA PRO 1.9.11 — EDICIÓN PARA macOS
+
+- Incluye «Fusionar PDF» en la barra superior y todas las mejoras de edición,
+  selección de texto, zoom y organización de páginas de la versión 1.9.11.
+- Ctrl/Comando permite seleccionar páginas independientes en los dos paneles;
+  Mayús selecciona un intervalo y el grupo completo puede arrastrarse.
+- Comando más la rueda amplía o reduce el documento manteniendo el punto bajo el
+  cursor; la rueda sin modificador continúa desplazando la página.
+- Se mantiene la aplicación universal para Apple Silicon e Intel, el OCR local
+  mediante Vision y la compatibilidad con macOS 12 o posterior.
+- El DMG continúa firmado de forma ad hoc y no está notarizado por Apple.
+

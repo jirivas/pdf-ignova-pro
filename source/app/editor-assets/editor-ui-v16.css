@@ -129,6 +129,11 @@
   background: rgba(18, 104, 232, 0.42);
 }
 
+.pdf-text-hit.pdf-text-selected {
+  outline: 1px solid rgba(18, 104, 232, 0.72);
+  background: rgba(18, 104, 232, 0.34);
+}
+
 .pdf-text-hit:hover {
   outline: 1px solid #1268e8;
   background: #1268e81a;
@@ -720,6 +725,28 @@
   color: #fff;
 }
 
+.merge-pdf-button {
+  flex: 0 0 auto;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid #9bb8de;
+  border-radius: 7px;
+  background: #f4f8ff;
+  color: #174f91;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.merge-pdf-button:hover:not(:disabled) {
+  border-color: #1268e8;
+  background: #e5f0ff;
+  color: #075cc9;
+}
+
 .stage.overview-stage {
   display: block;
   padding: 28px 24px;
@@ -847,6 +874,13 @@
   font-size: 11px;
 }
 
+.dual-document-panel > header em {
+  color: #1268e8;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .dual-document-panel > header select {
   max-width: 48%;
   height: 31px;
@@ -880,9 +914,14 @@
 }
 
 .dual-page-card:hover,
-.dual-page-card.active {
+.dual-page-card.active,
+.dual-page-card.selected {
   border-color: #1268e8;
   background: #e2edff;
+}
+
+.dual-page-card.selected:not(.active) {
+  box-shadow: inset 0 0 0 1px #1268e8;
 }
 
 .dual-page-canvas {
@@ -973,9 +1012,9 @@
   height: 100%;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   color: inherit;
-  white-space: pre-wrap;
+  white-space: pre;
   overflow-wrap: normal;
   word-break: normal;
   line-height: inherit;

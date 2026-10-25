@@ -13132,9 +13132,56 @@ function PdfEditableTextLayer({
   enabled: l,
   onPick: u,
   onLink,
+  onSelection,
 }) {
   let [o, f] = (0, I.useState)([]),
-    [nativeLinks, setNativeLinks] = (0, I.useState)([]);
+    [nativeLinks, setNativeLinks] = (0, I.useState)([]),
+    [selectedKeys, setSelectedKeys] = (0, I.useState)(new Set()),
+    dragSelection = (0, I.useRef)(null),
+    suppressClick = (0, I.useRef)(!1),
+    updateControlledSelection = (anchorKey, focusKey) => {
+      let range = window.PDF_IGNOVA_TEXT_EDIT?.createTextRange(
+        o,
+        anchorKey,
+        focusKey,
+      );
+      if (!range?.keys?.length) return;
+      (setSelectedKeys(new Set(range.keys)), onSelection?.(range.text));
+    },
+    handleSelectionMove = (event) => {
+      let drag = dragSelection.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      let distance = Math.hypot(
+        event.clientX - drag.startX,
+        event.clientY - drag.startY,
+      );
+      if (distance < 4 && !drag.moved) return;
+      drag.moved = !0;
+      let hit = document
+        .elementFromPoint(event.clientX, event.clientY)
+        ?.closest?.("[data-pdf-text-key]");
+      let focusKey = hit?.getAttribute?.("data-pdf-text-key") || drag.lastKey;
+      if (focusKey && focusKey !== drag.lastKey) {
+        drag.lastKey = focusKey;
+        updateControlledSelection(drag.anchorKey, focusKey);
+      } else if (focusKey) updateControlledSelection(drag.anchorKey, focusKey);
+      event.preventDefault();
+    },
+    finishControlledSelection = (event) => {
+      let drag = dragSelection.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      if (drag.moved) {
+        (updateControlledSelection(drag.anchorKey, drag.lastKey),
+          window.getSelection?.()?.removeAllRanges?.(),
+          (suppressClick.current = !0),
+          event.preventDefault(),
+          event.stopPropagation());
+      }
+      dragSelection.current = null;
+    };
   return (
     (0, I.useEffect)(() => {
       let i = !1;
@@ -13143,6 +13190,7 @@ function PdfEditableTextLayer({
           if (!e || !a || !l) {
             f([]);
             setNativeLinks([]);
+            setSelectedKeys(new Set());
             return;
           }
           try {
@@ -13199,9 +13247,13 @@ function PdfEditableTextLayer({
                     height: c,
                     angle: g,
                     font: H,
+                    cssFont: sourceFont?.loadedName || w || H,
                     bold: /bold|black|heavy|semibold|demi/i.test(fontDescriptor),
                     italic: /italic|oblique/i.test(fontDescriptor),
                     sourceFontName,
+                    sourceFontKey: z.fontName || "",
+                    fontSizePdf: c / Math.max(b.scale || 1, 0.0001),
+                    pageWidthPoints: C.width,
                     pageWidth: b.width,
                     pageHeight: b.height,
                     link:
@@ -13209,6 +13261,8 @@ function PdfEditableTextLayer({
                   };
                 })
                 .filter(Boolean);
+            D =
+              window.PDF_IGNOVA_TEXT_EDIT?.orderTextItems(D) || D;
             let annotations = [];
             try {
               let linkData = await r.getAnnotations({ intent: "display" });
@@ -13308,7 +13362,7 @@ function PdfEditableTextLayer({
             (0, d.jsx)(
               "span",
               {
-                className: `pdf-text-hit ${i.link ? "pdf-text-link" : ""}`,
+                className: `pdf-text-hit ${i.link ? "pdf-text-link" : ""} ${selectedKeys.has(i.key) ? "pdf-text-selected" : ""}`,
                 "data-pdf-text-key": i.key,
                 title: i.link
                   ? `Enlace: ${i.link.label}`
@@ -13320,11 +13374,32 @@ function PdfEditableTextLayer({
                   height: Math.max(10, i.height),
                   transform: `rotate(${i.angle}rad)`,
                   fontSize: i.height,
-                  fontFamily: i.font,
+                  fontFamily: i.cssFont || i.font,
                   fontWeight: i.bold ? 700 : 400,
                   fontStyle: i.italic ? "italic" : "normal",
                 },
+                onPointerDown: (event) => {
+                  if (event.button !== 0 || i.link) return;
+                  dragSelection.current = {
+                    pointerId: event.pointerId,
+                    anchorKey: i.key,
+                    lastKey: i.key,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    moved: !1,
+                  };
+                  event.currentTarget.setPointerCapture?.(event.pointerId);
+                },
+                onPointerMove: handleSelectionMove,
+                onPointerUp: finishControlledSelection,
+                onPointerCancel: finishControlledSelection,
                 onClick: (r) => {
+                  if (suppressClick.current) {
+                    (r.preventDefault(),
+                      r.stopPropagation(),
+                      (suppressClick.current = !1));
+                    return;
+                  }
                   let selectedText =
                     window.PDF_IGNOVA_TEXT_SELECTION?.readPdfSelection(
                       document,
@@ -13421,6 +13496,8 @@ function cs() {
     p = (0, I.useRef)(null),
     c = (0, I.useRef)(null),
     ocrDrag = (0, I.useRef)(null),
+    zoomWheelAnchor = (0, I.useRef)(null),
+    dualSelectionAnchors = (0, I.useRef)({}),
     searchRequest = (0, I.useRef)(0),
     saveDialogInProgress = (0, I.useRef)(!1),
     [g, S] = (0, I.useState)([]),
@@ -13436,6 +13513,7 @@ function cs() {
     [W, Me] = (0, I.useState)("hand"),
     [Cf, Gu] = (0, I.useState)(82),
     [dualPanelOpen, setDualPanelOpen] = (0, I.useState)(!1),
+    [dualPageSelections, setDualPageSelections] = (0, I.useState)({}),
     [pageNumberDraft, setPageNumberDraft] = (0, I.useState)("1"),
     [hs, yf] = (0, I.useState)(!0),
     [fn, kl] = (0, I.useState)(!0),
@@ -13496,14 +13574,27 @@ function cs() {
     O.length < 2 && setDualPanelOpen(!1);
   }, [O.length]);
   (0, I.useEffect)(() => {
+    if (!Q) return;
+    let selectedIds = [...ue];
+    setDualPageSelections((current) => {
+      let previousIds = current[Q] || [];
+      return previousIds.length === selectedIds.length &&
+        previousIds.every((id, index) => id === selectedIds[index])
+        ? current
+        : { ...current, [Q]: selectedIds };
+    });
+  }, [Q, ue]);
+  (0, I.useEffect)(() => {
     let syncSelection = () => {
       let selectedText =
         W === "select"
           ? window.PDF_IGNOVA_TEXT_SELECTION?.readPdfSelection(document) || ""
           : "";
-      setNativeSelectionText((current) =>
-        current === selectedText ? current : selectedText,
-      );
+      if (selectedText) {
+        setNativeSelectionText((current) =>
+          current === selectedText ? current : selectedText,
+        );
+      } else if (W !== "select") setNativeSelectionText("");
     };
     (document.addEventListener("selectionchange", syncSelection),
       syncSelection());
@@ -13513,6 +13604,19 @@ function cs() {
     let pageIndex = Math.max(0, w.findIndex((page) => page.id === $t));
     setPageNumberDraft(w.length ? String(pageIndex + 1) : "0");
   }, [$t, w.length]);
+  (0, I.useLayoutEffect)(() => {
+    let anchor = zoomWheelAnchor.current;
+    if (!anchor || anchor.zoom === Cf) return;
+    let stage = anchor.stage;
+    if (!stage?.isConnected) {
+      zoomWheelAnchor.current = null;
+      return;
+    }
+    let ratio = Cf / Math.max(anchor.zoom, 1);
+    stage.scrollLeft = anchor.contentX * ratio - anchor.offsetX;
+    stage.scrollTop = anchor.contentY * ratio - anchor.offsetY;
+    zoomWheelAnchor.current = null;
+  }, [Cf]);
   let Ue = Math.max(
       0,
       w.findIndex((n) => n.id === $t),
@@ -13541,9 +13645,11 @@ function cs() {
     }, [pageNumberDraft, Ue, w.length]),
     readNativePdfSelection = (0, I.useCallback)(() => {
       return (
-        window.PDF_IGNOVA_TEXT_SELECTION?.readPdfSelection(document) || ""
+        window.PDF_IGNOVA_TEXT_SELECTION?.readPdfSelection(document) ||
+        nativeSelectionText ||
+        ""
       );
-    }, []),
+    }, [nativeSelectionText]),
     copyNativePdfSelection = (0, I.useCallback)(
       async (selectedText) => {
         let text =
@@ -13715,6 +13821,17 @@ function cs() {
           ne = Ee((n.top - n.height * 0.2 - 1) / n.pageHeight, 0, 0.99),
           oe = Ee((n.width + 5) / n.pageWidth, 0.01, 1 - R),
           Y = Ee((n.height * 1.4 + 3) / n.pageHeight, 0.012, 1 - ne),
+          appearance = window.PDF_IGNOVA_TEXT_EDIT?.captureTextAppearance(
+            document.querySelector(".pagestage .canvas-wrap canvas"),
+            {
+              left: n.left - 2,
+              top: n.top - n.height * 0.2 - 1,
+              width: n.width + 5,
+              height: n.height * 1.4 + 3,
+              pageWidth: n.pageWidth,
+              pageHeight: n.pageHeight,
+            },
+          ),
           k = {
             id: Da(),
             pageId: $.id,
@@ -13724,13 +13841,22 @@ function cs() {
             y: A,
             w: Ee(n.width / n.pageWidth + 0.008, 0.025, 1 - y),
             h: Ee(n.height / n.pageHeight + 0.006, 0.018, 1 - A),
-            color: "#111111",
-            size: Ee(Math.round(n.height * 0.86), 8, 72),
+            color: appearance?.textColor || "#111111",
+            backgroundColor: appearance?.backgroundColor || "#ffffff",
+            backgroundPatchData: appearance?.backgroundPatchData || null,
+            size: Ee(Math.round(n.fontSizePdf || n.height), 6, 144),
+            fontSizeRatio:
+              (n.fontSizePdf || n.height) /
+              Math.max(n.pageWidthPoints || n.pageWidth, 1),
+            pageWidthPoints: n.pageWidthPoints || n.pageWidth,
             font: n.font,
+            cssFont: n.cssFont || n.font,
             bold: n.bold,
             italic: !!n.italic,
             underline: !1,
             sourceFontName: n.sourceFontName || n.font,
+            sourceFontKey: n.sourceFontKey || "",
+            angle: (n.angle * 180) / Math.PI,
             preserveSourceFont: !0,
             textDirty: !1,
             styleDirty: !1,
@@ -13966,6 +14092,35 @@ function cs() {
         }),
         n.shiftKey || gs(L));
     },
+    selectOrganizerPage = (event, documentItem, page, pageIndex) => {
+      if (documentItem.id === Q) {
+        ox(event, page.id, pageIndex);
+        dualSelectionAnchors.current[documentItem.id] = pageIndex;
+        return;
+      }
+      let additive = event.ctrlKey || event.metaKey,
+        range = event.shiftKey,
+        anchorIndex = dualSelectionAnchors.current[documentItem.id];
+      setDualPageSelections((current) => {
+        let selected = new Set(current[documentItem.id] || []);
+        if (range && Number.isInteger(anchorIndex)) {
+          selected = new Set(
+            documentItem.pages
+              .slice(
+                Math.min(anchorIndex, pageIndex),
+                Math.max(anchorIndex, pageIndex) + 1,
+              )
+              .map((item) => item.id),
+          );
+        } else if (additive) {
+          selected.has(page.id)
+            ? selected.delete(page.id)
+            : selected.add(page.id);
+        } else selected = new Set([page.id]);
+        return { ...current, [documentItem.id]: [...selected] };
+      });
+      if (!range) dualSelectionAnchors.current[documentItem.id] = pageIndex;
+    },
     ql = (0, I.useCallback)(() => {
       if (!ue.size) return;
       Te();
@@ -14149,6 +14304,16 @@ function cs() {
         }
 
         ((i.current = documents), G(documents));
+        setDualPageSelections((current) => {
+          let next = { ...current };
+          documents.forEach((documentItem) => {
+            let existing = new Set(current[documentItem.id] || []);
+            next[documentItem.id] = documentItem.pages
+              .filter((page) => existing.has(page.id))
+              .map((page) => page.id);
+          });
+          return next;
+        });
         let activeDocument = documents.find((documentItem) => documentItem.id === Q);
         if (activeDocument) {
           ((o.current = Wt(activeDocument.pages)),
@@ -14396,20 +14561,37 @@ function cs() {
           W === "ocr-region"
         )
           return;
+        let pageWidthPoints = 595.28,
+          pageHeightPoints = 841.89;
+        if (W === "text" && gn) {
+          try {
+            let sourcePage = await (await ds(gn)).getPage($.index + 1),
+              sourceViewport = sourcePage.getViewport({
+                scale: 1,
+                rotation: ss($.baseRotation + $.rotation),
+              });
+            ((pageWidthPoints = sourceViewport.width),
+              (pageHeightPoints = sourceViewport.height));
+          } catch {}
+        }
         let L =
           W === "text"
             ? {
                 id: Da(),
                 pageId: $.id,
                 type: "text",
-                text: "Escribe aqu\xED",
+                text: "",
                 x: s.x,
                 y: s.y,
                 w: 0.28,
-                h: 0.05,
+                h: Ee((12 * 1.4) / pageHeightPoints, 0.025, 0.08),
                 color: "#111111",
-                size: 16,
+                backgroundColor: "transparent",
+                size: 12,
+                fontSizeRatio: 12 / pageWidthPoints,
+                pageWidthPoints,
                 font: "Arial",
+                cssFont: "Arial",
                 bold: !1,
                 italic: !1,
                 underline: !1,
@@ -14442,8 +14624,17 @@ function cs() {
           De(L.id),
           kl(!0),
           Me(L.type === "text" ? "select" : W));
+        if (L.type === "text") {
+          (F("Escribe directamente; Intro mantiene cada salto de línea"),
+            setTimeout(() => {
+              let editor = document.querySelector(
+                `[data-mark-id="${L.id}"] .text-editor`,
+              );
+              editor?.focus();
+            }, 0));
+        }
       },
-      [$, aa, xn, W, highlightColor, highlightOpacity, redactColor],
+      [$, gn, aa, xn, W, highlightColor, highlightOpacity, redactColor, F],
     ),
     ix = (n) => {
       if (W === "ocr-region" && n.button === 0 && $) {
@@ -14649,7 +14840,20 @@ function cs() {
     }, [fitPageZoom]),
     mx = (n) => {
       let s = n.currentTarget;
-      if ((n.preventDefault(), n.ctrlKey || n.metaKey)) Ya(n.deltaY < 0 ? 10 : -10);
+      if ((n.preventDefault(), n.ctrlKey || n.metaKey)) {
+        let bounds = s.getBoundingClientRect(),
+          offsetX = n.clientX - bounds.left,
+          offsetY = n.clientY - bounds.top;
+        zoomWheelAnchor.current = {
+          stage: s,
+          zoom: Cf,
+          offsetX,
+          offsetY,
+          contentX: s.scrollLeft + offsetX,
+          contentY: s.scrollTop + offsetY,
+        };
+        Ya(n.deltaY < 0 ? 10 : -10);
+      }
       else if (n.shiftKey) s.scrollLeft += n.deltaY;
       else {
         let L = s.scrollHeight <= s.clientHeight + 4,
@@ -14792,11 +14996,60 @@ function cs() {
         _ = await s.create(),
         pe = new Map(),
         xe = new Map(),
+        backgroundPatches = new Map(),
         fontkitRegistered = !1,
         Se = async (he) => {
-          let R = `${he.font}-${!!he.bold}-${!!he.italic}`,
+          let R =
+              he.preserveSourceFont && he.sourceFontKey
+                ? `source-${he.pageId}-${he.sourceFontKey}`
+                : `${he.font}-${!!he.bold}-${!!he.italic}`,
             ne = xe.get(R);
           if (ne) return ne;
+          if (he.preserveSourceFont && he.sourceFontKey) {
+            try {
+              let sourcePageState = o.current.find(
+                  (pageState) => pageState.id === he.pageId,
+                ),
+                sourceDocument = g.find(
+                  (documentSource) =>
+                    documentSource.id === sourcePageState?.docId,
+                );
+              if (sourcePageState && sourceDocument) {
+                let sourcePage = await (
+                  await ds(sourceDocument)
+                ).getPage(sourcePageState.index + 1);
+                await sourcePage.getOperatorList();
+                let sourceFont = sourcePage.commonObjs.get(he.sourceFontKey),
+                  sourceBytes =
+                    sourceFont?.data instanceof Uint8Array
+                      ? sourceFont.data
+                      : sourceFont?.data instanceof ArrayBuffer
+                        ? new Uint8Array(sourceFont.data)
+                        : null;
+                if (sourceBytes?.length) {
+                  if (!globalThis.fontkit)
+                    await import("./fontkit.umd.min.js");
+                  if (globalThis.fontkit) {
+                    if (!fontkitRegistered) {
+                      (_.registerFontkit(globalThis.fontkit),
+                        (fontkitRegistered = !0));
+                    }
+                    let embeddedSourceFont = await _.embedFont(sourceBytes, {
+                      subset: !0,
+                    });
+                    return (
+                      xe.set(R, embeddedSourceFont), embeddedSourceFont
+                    );
+                  }
+                }
+              }
+            } catch (sourceFontError) {
+              console.warn(
+                "No se pudo reutilizar la fuente incrustada del PDF",
+                sourceFontError,
+              );
+            }
+          }
           if (window.pdfEstudio?.getSystemFont) {
             try {
               if (!globalThis.fontkit)
@@ -14879,19 +15132,60 @@ function cs() {
                 },
                 ja = Ju.x * oe.width,
                 al = oe.height - (Ju.y + Ju.h) * oe.height;
-              ne.drawRectangle({
-                x: Math.max(0, ja),
-                y: Math.max(0, al),
-                width: Math.min(oe.width - ja, Ju.w * oe.width),
-                height: Math.min(oe.height - al, Ju.h * oe.height),
-                color: A(1, 1, 1),
-              });
+              let coverWidth = Math.min(oe.width - ja, Ju.w * oe.width),
+                coverHeight = Math.min(oe.height - al, Ju.h * oe.height);
+              if (Y.backgroundPatchData) {
+                try {
+                  let patchImage = backgroundPatches.get(
+                    Y.backgroundPatchData,
+                  );
+                  if (!patchImage) {
+                    let patchBytes =
+                      window.PDF_IGNOVA_TEXT_EDIT?.dataUrlToBytes(
+                        Y.backgroundPatchData,
+                      );
+                    if (patchBytes?.length) {
+                      patchImage = await _.embedPng(patchBytes);
+                      backgroundPatches.set(Y.backgroundPatchData, patchImage);
+                    }
+                  }
+                  if (patchImage) {
+                    ne.drawImage(patchImage, {
+                      x: Math.max(0, ja),
+                      y: Math.max(0, al),
+                      width: coverWidth,
+                      height: coverHeight,
+                    });
+                  } else throw new Error("Fondo no disponible");
+                } catch {
+                  ne.drawRectangle({
+                    x: Math.max(0, ja),
+                    y: Math.max(0, al),
+                    width: coverWidth,
+                    height: coverHeight,
+                    color: k(Y.backgroundColor || "#ffffff"),
+                  });
+                }
+              } else {
+                ne.drawRectangle({
+                  x: Math.max(0, ja),
+                  y: Math.max(0, al),
+                  width: coverWidth,
+                  height: coverHeight,
+                  color: k(Y.backgroundColor || "#ffffff"),
+                });
+              }
             }
             let textFont = await Se(Y),
-              textSize = Math.max(6, (Y.size * oe.width) / Ye.w),
+              textSize = Math.max(
+                4,
+                Y.fontSizeRatio
+                  ? Y.fontSizeRatio * oe.width
+                  : (Y.size * oe.width) / Ye.w,
+              ),
               textLineHeight = Math.max(
-                7,
-                (Y.size * oe.width * 1.15) / Ye.w,
+                4.6,
+                textSize * 1.15,
               ),
               textColor = k(Y.color),
               textAngle = Y.angle || 0,
@@ -15581,6 +15875,13 @@ function cs() {
         ma(n.id, { crop: y }));
     };
   ((0, I.useEffect)(() => {
+    let stage = u.current;
+    if (!stage) return;
+    let handleWheel = (event) => mx(event);
+    stage.addEventListener("wheel", handleWheel, { passive: !1 });
+    return () => stage.removeEventListener("wheel", handleWheel);
+  }, [mx]),
+    (0, I.useEffect)(() => {
     if (!window.pdfEstudio) return;
     let n = !0,
       s = async (L) => {
@@ -15677,7 +15978,10 @@ function cs() {
       );
     }
     let s = Math.max(1, 100 - n.crop.left - n.crop.right),
-      L = Math.max(1, 100 - n.crop.top - n.crop.bottom);
+      L = Math.max(1, 100 - n.crop.top - n.crop.bottom),
+      displayFontSize = n.fontSizeRatio
+        ? Math.max(1, n.fontSizeRatio * Ye.w)
+        : n.size;
     return (0, d.jsxs)(
       "div",
       {
@@ -15693,15 +15997,19 @@ function cs() {
             n.type === "text" || n.type === "image" || n.type === "watermark"
               ? "transparent"
               : n.color,
-          fontSize: n.size,
-          fontFamily: n.font,
+          fontSize: displayFontSize,
+          fontFamily: n.cssFont || n.font,
           fontWeight: n.bold ? 700 : 400,
           fontStyle: n.italic ? "italic" : "normal",
           textDecoration: n.underline ? "underline" : "none",
           opacity:
             n.type === "highlight" ? (n.opacity ?? 0.38) : (n.opacity ?? 1),
           mixBlendMode: n.type === "highlight" ? "multiply" : void 0,
-          transform: n.type === "watermark" ? `rotate(${n.angle || 0}deg)` : void 0,
+          transform:
+            n.type === "watermark" || (n.type === "text" && n.angle)
+              ? `rotate(${n.angle || 0}deg)`
+              : void 0,
+          transformOrigin: n.type === "text" ? "0 0" : void 0,
         },
         onPointerDown:
           n.type === "text" || W === "draw" ? void 0 : (y) => Ln(y, n, "move"),
@@ -15728,9 +16036,10 @@ function cs() {
                   contentEditable: !0,
                   suppressContentEditableWarning: !0,
                   spellCheck: !1,
+                  "data-placeholder": n.text ? void 0 : "Escribe aquí",
                   style: {
                     color: n.color,
-                    fontFamily: n.font,
+                    fontFamily: n.cssFont || n.font,
                     fontWeight: n.bold ? 700 : 400,
                     fontStyle: n.italic ? "italic" : "normal",
                     textDecoration: n.underline ? "underline" : "none",
@@ -15745,12 +16054,22 @@ function cs() {
                         .closest(".mark")
                         ?.classList.add("pdf-text-live-edit"));
                   },
+                  onPaste: (y) => {
+                    let A = y.clipboardData?.getData("text/plain");
+                    if (typeof A !== "string") return;
+                    (y.preventDefault(),
+                      document.execCommand("insertText", !1, A));
+                  },
+                  onKeyDown: (y) => {
+                    y.key === "Escape" && y.currentTarget.blur();
+                  },
                   onBlur: (y) => {
                     let A = (y.currentTarget.innerText || "").replace(/\r/g, ""),
                       k = y.currentTarget.dataset.pdfTextUserEdited === "1",
                       lineCount = Math.max(1, A.split("\n").length),
                       minimumHeight = Ee(
-                        (lineCount * n.size * 1.2 + 4) / Math.max(Ye.h, 1),
+                        (lineCount * displayFontSize * 1.15 + 4) /
+                          Math.max(Ye.h, 1),
                         0.025,
                         1 - n.y,
                       );
@@ -15767,6 +16086,14 @@ function cs() {
                     ma(n.id, {
                       text: A,
                       h: Math.max(n.h, minimumHeight),
+                      w: Math.max(
+                        n.w,
+                        Math.min(
+                          1 - n.x,
+                          (y.currentTarget.scrollWidth + 4) /
+                            Math.max(Ye.w, 1),
+                        ),
+                      ),
                       textDirty: n.replaceOriginal
                         ? A !== (n.sourceText || "")
                         : !0,
@@ -15810,8 +16137,12 @@ function cs() {
       n.id,
     );
   },
-    renderOrganizerPanel = (documentItem, panelLabel, targetSelector = !1) =>
-      (0, d.jsxs)(
+    renderOrganizerPanel = (documentItem, panelLabel, targetSelector = !1) => {
+      let panelSelection =
+        documentItem.id === Q
+          ? ue
+          : new Set(dualPageSelections[documentItem.id] || []);
+      return (0, d.jsxs)(
         "section",
         {
           className: "dual-document-panel",
@@ -15822,6 +16153,10 @@ function cs() {
                   children: [
                     (0, d.jsx)("small", { children: panelLabel }),
                     (0, d.jsx)("strong", { children: documentItem.name }),
+                    panelSelection.size > 1 &&
+                      (0, d.jsxs)("em", {
+                        children: [panelSelection.size, " seleccionadas"],
+                      }),
                   ],
                 }),
                 targetSelector
@@ -15853,17 +16188,27 @@ function cs() {
               children: [
                 ...documentItem.pages.map((page, pageIndex) => {
                   let source = g.find((item) => item.id === page.docId),
-                    isActive = documentItem.id === Q && page.id === $t;
+                    isActive = documentItem.id === Q && page.id === $t,
+                    isSelected = panelSelection.has(page.id);
                   return (0, d.jsxs)(
                     "article",
                     {
                       draggable: !0,
-                      className: `dual-page-card ${isActive ? "active" : ""}`,
+                      className: `dual-page-card ${isActive ? "active" : ""} ${isSelected ? "selected" : ""}`,
+                      title:
+                        "Clic para seleccionar; Ctrl/⌘ añade páginas y Mayús selecciona un intervalo",
                       onDragStart: (event) => {
-                        let pageIds =
-                          documentItem.id === Q && ue.has(page.id)
-                            ? [...ue]
-                            : [page.id];
+                        let pageIds = isSelected
+                          ? [...panelSelection]
+                          : [page.id];
+                        if (!isSelected) {
+                          documentItem.id === Q
+                            ? (Ta(page.id), ka(new Set([page.id])))
+                            : setDualPageSelections((current) => ({
+                                ...current,
+                                [documentItem.id]: [page.id],
+                              }));
+                        }
                         (event.dataTransfer.setData(
                           "application/x-pdf-ignova-pages",
                           JSON.stringify({
@@ -15881,16 +16226,21 @@ function cs() {
                           documentItem.id,
                           pageIndex,
                         ),
-                      onClick: () => {
-                        if (documentItem.id === Q) {
-                          (Ta(page.id), ka(new Set([page.id])));
-                        } else {
+                      onClick: (event) =>
+                        selectOrganizerPage(
+                          event,
+                          documentItem,
+                          page,
+                          pageIndex,
+                        ),
+                      onDoubleClick: () => {
+                        if (documentItem.id !== Q) {
                           lx(documentItem.id);
                           setDualPanelOpen(!0);
                           setTimeout(() => {
                             (Ta(page.id), ka(new Set([page.id])));
                           }, 0);
-                        }
+                        } else Ta(page.id);
                       },
                       children: [
                         (0, d.jsx)("div", {
@@ -15931,6 +16281,7 @@ function cs() {
         },
         documentItem.id,
       );
+    };
   return (0, d.jsxs)("main", {
     className: "app",
     onClick: () => ea && Xa(null),
@@ -16099,6 +16450,17 @@ function cs() {
                 },
                 children: "2 paneles",
               }),
+            ],
+          }),
+          (0, d.jsxs)("button", {
+            type: "button",
+            className: "merge-pdf-button",
+            onClick: () => Jx("merge"),
+            disabled: !w.length,
+            title: "Añadir uno o varios PDF al documento actual",
+            children: [
+              (0, d.jsx)(df, { size: 15 }),
+              (0, d.jsx)("span", { children: "Fusionar PDF" }),
             ],
           }),
           (0, d.jsxs)("button", {
@@ -17124,7 +17486,6 @@ function cs() {
               (0, d.jsx)("div", {
                 ref: u,
                 className: `stage ${W === "hand" ? "hand" : ""} ${Wh ? "panning" : ""} ${Cf <= 35 ? "overview-stage" : ""} ${dualPanelOpen ? "dual-stage" : ""}`,
-                onWheel: mx,
                 onPointerDown: dualPanelOpen || Cf <= 35 ? void 0 : sx,
                 onPointerMove: dualPanelOpen || Cf <= 35 ? void 0 : cx,
                 onPointerUp: dualPanelOpen || Cf <= 35 ? void 0 : Rs,
@@ -17228,6 +17589,7 @@ onContextMenu:gx,onPointerDown:ix,
                           enabled: W === "select",
                           onPick: wx,
                           onLink: handlePdfLink,
+                          onSelection: setNativeSelectionText,
                         }),
                         ocrSelection &&
                           (0, d.jsx)("span", {
@@ -17260,6 +17622,13 @@ onContextMenu:gx,onPointerDown:ix,
                                     top: `${n.sourceRect.y * 100}%`,
                                     width: `${n.sourceRect.w * 100}%`,
                                     height: `${n.sourceRect.h * 100}%`,
+                                    backgroundColor:
+                                      n.backgroundColor || "#ffffff",
+                                    backgroundImage: n.backgroundPatchData
+                                      ? `url(${n.backgroundPatchData})`
+                                      : void 0,
+                                    backgroundSize: "100% 100%",
+                                    backgroundRepeat: "no-repeat",
                                   },
                                 },
                                 `cover-${n.id}`,
@@ -17380,7 +17749,12 @@ onContextMenu:gx,onPointerDown:ix,
                                   let nextText = n.target.value,
                                     lineCount = Math.max(1, nextText.split("\n").length),
                                     minimumHeight = Ee(
-                                      (lineCount * U.size * 1.2 + 4) /
+                                      (lineCount *
+                                          (U.fontSizeRatio
+                                            ? U.fontSizeRatio * Ye.w
+                                            : U.size) *
+                                          1.15 +
+                                        4) /
                                         Math.max(Ye.h, 1),
                                       0.025,
                                       1 - U.y,
@@ -17404,6 +17778,7 @@ onContextMenu:gx,onPointerDown:ix,
                                     U.id,
                                     {
                                       font: n.target.value,
+                                      cssFont: n.target.value,
                                       preserveSourceFont: !1,
                                       styleDirty: !0,
                                     },
@@ -17457,18 +17832,30 @@ onContextMenu:gx,onPointerDown:ix,
                                   (0, d.jsx)("input", {
                                     "aria-label": "Tama\xF1o",
                                     type: "number",
-                                    min: "8",
-                                    max: "72",
+                                    min: "6",
+                                    max: "144",
                                     value: U.size,
-                                    onChange: (n) =>
+                                    onChange: (n) => {
+                                      let nextSize = Ee(
+                                        +n.target.value || 6,
+                                        6,
+                                        144,
+                                      );
                                       ma(
                                         U.id,
                                         {
-                                          size: Ee(+n.target.value || 8, 8, 72),
+                                          size: nextSize,
+                                          fontSizeRatio:
+                                            nextSize /
+                                            Math.max(
+                                              U.pageWidthPoints || 595.28,
+                                              1,
+                                            ),
                                           styleDirty: !0,
                                         },
                                         !0,
-                                      ),
+                                      );
+                                    },
                                   }),
                                   (0, d.jsxs)("button", {
                                     className: `bold-button ${U.bold ? "active" : ""}`,

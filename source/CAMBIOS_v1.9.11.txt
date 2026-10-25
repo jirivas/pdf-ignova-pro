@@ -1,0 +1,20 @@
+PDF IGNOVA PRO 1.9.11 — CAMBIOS
+
+- Se añade «Fusionar PDF» a la barra superior. Permite escoger uno o varios
+  PDF, los incorpora al final del documento activo y conserva su orden.
+- La edición de texto nativo conserva con mucha más fidelidad la tipografía,
+  el tamaño, el color, el giro y el fondo originales. Cuando es posible se
+  reutiliza la fuente incrustada del propio PDF.
+- Los fondos no uniformes se reconstruyen mediante una muestra de la página,
+  evitando el rectángulo blanco que aparecía al modificar texto.
+- La selección de texto se estabiliza para recorrer líneas y párrafos completos
+  antes de copiar o editar.
+- La creación de texto nuevo mantiene el punto de inserción, las líneas escritas
+  y el tamaño del cuadro sin desplazarlo inesperadamente.
+- El zoom con la rueda utiliza Ctrl (o Comando en Mac), conserva el punto situado
+  bajo el cursor y mantiene el desplazamiento normal sin esa tecla.
+- En la vista de dos paneles ya se seleccionan varias páginas de cada documento
+  con Ctrl/Comando o intervalos con Mayús, y se arrastran en grupo.
+- Se han verificado en una prueba funcional la fusión de dos PDF de tres páginas,
+  la edición con conservación de aspecto, el zoom y la selección múltiple.
+

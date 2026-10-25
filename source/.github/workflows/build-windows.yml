@@ -66,7 +66,7 @@ jobs:
       - name: Verify installation and uninstallation
         shell: pwsh
         run: |
-          $setup = Resolve-Path "release-installer\PDF-Ignova-Pro-1.9.8-Setup-Windows-x64-unsigned.exe"
+          $setup = Resolve-Path "release-installer\PDF-Ignova-Pro-1.9.11-Setup-Windows-x64-unsigned.exe"
           $installDir = Join-Path $env:RUNNER_TEMP "PDF-Ignova-Pro-test-install"
           $process = Start-Process -FilePath $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/DIR=$installDir" -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw "Installer returned $($process.ExitCode)." }
@@ -83,13 +83,13 @@ jobs:
         run: |
           $folder = Get-ChildItem release -Directory | Select-Object -First 1
           if (-not $folder) { throw "Packaged application folder not found." }
-          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath PDF-Ignova-Pro-1.9.8-Windows-x64-portable-unsigned.zip -Force
+          Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath PDF-Ignova-Pro-1.9.11-Windows-x64-portable-unsigned.zip -Force
 
       - name: Upload unsigned artifact
         uses: actions/upload-artifact@v7
         with:
-          name: pdf-ignova-pro-1.9.8-windows-x64-unsigned
+          name: pdf-ignova-pro-1.9.11-windows-x64-unsigned
           path: |
-            release-installer/PDF-Ignova-Pro-1.9.8-Setup-Windows-x64-unsigned.exe
-            PDF-Ignova-Pro-1.9.8-Windows-x64-portable-unsigned.zip
+            release-installer/PDF-Ignova-Pro-1.9.11-Setup-Windows-x64-unsigned.exe
+            PDF-Ignova-Pro-1.9.11-Windows-x64-portable-unsigned.zip
           if-no-files-found: error
