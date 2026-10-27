@@ -87,7 +87,7 @@ jobs:
           helper_root="$app_path/Contents/Resources/app.asar.unpacked/scripts"
           test -d "$app_path"
           test -x "$executable"
-          test "$(plutil -extract CFBundleShortVersionString raw "$app_path/Contents/Info.plist")" = "1.9.12"
+          test "$(plutil -extract CFBundleShortVersionString raw "$app_path/Contents/Info.plist")" = "1.9.13"
           plutil -p "$app_path/Contents/Info.plist" | grep -q "com.adobe.pdf"
           for binary in "$executable" "$helper_root/ocr-macos" "$helper_root/convert-tiff-macos"; do
             test -x "$binary"
@@ -107,11 +107,11 @@ jobs:
           app_path="release-mac/PDF Ignova Pro-darwin-universal/PDF Ignova Pro.app"
           staging="$RUNNER_TEMP/pdf-ignova-dmg"
           mount_point="$RUNNER_TEMP/pdf-ignova-mounted"
-          asset="PDF-Ignova-Pro-1.9.12-macOS-Universal-unnotarized.dmg"
+          asset="PDF-Ignova-Pro-1.9.13-macOS-Universal-unnotarized.dmg"
           mkdir -p "$staging" "$mount_point"
           ditto "$app_path" "$staging/PDF Ignova Pro.app"
           ln -s /Applications "$staging/Applications"
-          hdiutil create -volname "PDF Ignova Pro 1.9.12" -srcfolder "$staging" -ov -format UDZO "$asset"
+          hdiutil create -volname "PDF Ignova Pro 1.9.13" -srcfolder "$staging" -ov -format UDZO "$asset"
           hdiutil verify "$asset"
           hdiutil attach -readonly -nobrowse -mountpoint "$mount_point" "$asset"
           test -d "$mount_point/PDF Ignova Pro.app"
@@ -122,35 +122,35 @@ jobs:
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v7
         with:
-          name: pdf-ignova-pro-1.9.12-macos-universal-unnotarized
+          name: pdf-ignova-pro-1.9.13-macos-universal-unnotarized
           path: |
-            source/PDF-Ignova-Pro-1.9.12-macOS-Universal-unnotarized.dmg
-            source/PDF-Ignova-Pro-1.9.12-macOS-Universal-unnotarized.dmg.sha256.txt
+            source/PDF-Ignova-Pro-1.9.13-macOS-Universal-unnotarized.dmg
+            source/PDF-Ignova-Pro-1.9.13-macOS-Universal-unnotarized.dmg.sha256.txt
           if-no-files-found: error
           retention-days: 30
 
-      - name: Add macOS installer to release 1.9.12
+      - name: Add macOS installer to release 1.9.13
         working-directory: source
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_NOTES: |
-            PDF Ignova Pro 1.9.12 para Windows 10/11 x64 y macOS 12 o posterior.
+            PDF Ignova Pro 1.9.13 para Windows 10/11 x64 y macOS 12 o posterior.
 
             Descargas recomendadas:
             - Windows: Setup.exe, con accesos directos y desinstalación normal.
             - macOS: DMG universal para Apple Silicon e Intel; arrastra la aplicación a Aplicaciones.
 
-            Funciones principales de 1.9.12:
-            - «Seleccionar texto» sustituye visualmente el texto original durante la edición, sin duplicarlo.
-            - Panel «Páginas» con cuadrícula de miniaturas, reordenación por arrastre y apertura con doble clic.
-            - Panel «Unir archivos» para seleccionar o soltar varios PDF y crear un único documento ordenable.
+            Funciones principales de 1.9.13:
+            - «Seleccionar texto» modifica directamente el texto existente, sin cuadro superpuesto, marco ni tiradores.
+            - «Texto» crea contenido nuevo mediante un cuadro de diálogo independiente.
+            - Conserva los paneles Páginas y Unir archivos incorporados en 1.9.12.
             - Conserva el organizador de dos paneles, guardado seguro, OCR, siete idiomas e impresión A1/A2.
             - OCR funcional probado con Windows OCR y macOS Vision.
 
             Los binarios aún no tienen una firma comercial. Windows puede mostrar SmartScreen y macOS puede pedir abrir la aplicación desde el menú contextual. El DMG de macOS está firmado de forma ad hoc, pero no notarizado por Apple.
         run: |
-          asset="PDF-Ignova-Pro-1.9.12-macOS-Universal-unnotarized.dmg"
-          gh release view v1.9.12 --repo "$GITHUB_REPOSITORY"
-          gh release upload v1.9.12 "$asset" "$asset.sha256.txt" --clobber --repo "$GITHUB_REPOSITORY"
-          gh release edit v1.9.12 --title "PDF Ignova Pro 1.9.12" --notes "$RELEASE_NOTES" --latest --repo "$GITHUB_REPOSITORY"
+          asset="PDF-Ignova-Pro-1.9.13-macOS-Universal-unnotarized.dmg"
+          gh release view v1.9.13 --repo "$GITHUB_REPOSITORY"
+          gh release upload v1.9.13 "$asset" "$asset.sha256.txt" --clobber --repo "$GITHUB_REPOSITORY"
+          gh release edit v1.9.13 --title "PDF Ignova Pro 1.9.13" --notes "$RELEASE_NOTES" --latest --repo "$GITHUB_REPOSITORY"

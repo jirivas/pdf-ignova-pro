@@ -174,8 +174,8 @@
 .mark.text.pdf-text-edit {
   box-sizing: border-box;
   min-width: 18px;
-  padding: 1px 2px;
-  background: #fff;
+  padding: 0;
+  background: transparent;
 }
 
 .mark.text.pdf-text-edit.pdf-text-pristine {
@@ -204,7 +204,17 @@
 }
 
 .mark.text.pdf-text-edit.chosen {
-  outline-color: #075cc9;
+  outline: 0;
+}
+
+.mark.text.pdf-text-edit .text-drag,
+.mark.text.pdf-text-edit .resize-handle {
+  display: none !important;
+}
+
+.mark.text.pdf-text-edit .text-editor:focus {
+  background: transparent;
+  box-shadow: none;
 }
 
 .pdf-original-cover {
@@ -257,6 +267,30 @@
   border: 1px solid #c8cfda;
   border-radius: 7px;
   font: 14px/1.45 Arial, sans-serif;
+}
+
+.new-text-modal {
+  width: min(560px, calc(100vw - 40px));
+}
+
+.new-text-modal > p {
+  margin: 0 0 12px;
+}
+
+.new-text-modal textarea {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  padding: 11px;
+  border: 1px solid #c8cfda;
+  border-radius: 7px;
+  outline: 0;
+  font: 14px/1.45 Arial, sans-serif;
+}
+
+.new-text-modal textarea:focus {
+  border-color: #1268e8;
+  box-shadow: 0 0 0 2px #dceaff;
 }
 
 .link-choice-modal {

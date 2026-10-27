@@ -1,0 +1,13 @@
+PDF IGNOVA PRO 1.9.13 — CAMBIOS PARA WINDOWS
+
+- Se separan por completo las herramientas «Seleccionar texto» y «Texto».
+- «Seleccionar texto» permite modificar directamente el texto existente en su
+  posición, sin abrir ni crear un cuadro de texto superpuesto.
+- Durante esa edición directa no aparecen marco, tiradores de movimiento ni
+  control de tamaño.
+- «Texto» queda reservado para crear contenido nuevo y abre un cuadro de diálogo
+  independiente antes de insertarlo en la página.
+- Se conservan el panel Páginas, la unión de archivos, el organizador de dos
+  paneles, OCR local, siete idiomas e impresión A4, A3, A2 y A1.
+
+Distribución pública sin firma digital. Windows puede mostrar SmartScreen.

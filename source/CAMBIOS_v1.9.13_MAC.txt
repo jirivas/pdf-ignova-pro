@@ -1,0 +1,10 @@
+PDF IGNOVA PRO 1.9.13 — CAMBIOS PARA macOS
+
+- «Seleccionar texto» modifica directamente el texto existente, sin cuadro
+  superpuesto, marco ni tiradores.
+- «Texto» crea contenido nuevo mediante un cuadro de diálogo independiente.
+- Se mantienen el panel Páginas, la unión de archivos, el organizador de dos
+  paneles, OCR con Vision, siete idiomas e impresión A4, A3, A2 y A1.
+
+DMG universal para Apple Silicon e Intel, con firma ad hoc y sin notarización.
+macOS puede pedir confirmación al abrir la aplicación por primera vez.

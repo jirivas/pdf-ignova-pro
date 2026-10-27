@@ -13549,6 +13549,8 @@ function cs() {
     [ocrRegionOpen, setOcrRegionOpen] = (0, I.useState)(!1),
     [ocrRegionBusy, setOcrRegionBusy] = (0, I.useState)(!1),
     [linkChoice, setLinkChoice] = (0, I.useState)(null),
+    [newTextDialog, setNewTextDialog] = (0, I.useState)(null),
+    [newTextDraft, setNewTextDraft] = (0, I.useState)(""),
     [nativeSelectionText, setNativeSelectionText] = (0, I.useState)("");
   ((0, I.useEffect)(() => {
     o.current = w;
@@ -13871,8 +13873,7 @@ function cs() {
           };
         (aa((_) => [..._, k]),
           De(k.id),
-          kl(!0),
-          F("Texto del PDF listo para editar"),
+          F("Edita directamente el texto seleccionado"),
           setTimeout(
             () =>
               document
@@ -14571,6 +14572,46 @@ function cs() {
         Me("select"),
         F("Texto del OCR insertado en el PDF"));
     },
+    confirmNewText = () => {
+      if (!newTextDialog) return;
+      let text = newTextDraft.replace(/\r/g, "");
+      if (!text.trim()) {
+        F("Escribe el texto que quieres crear");
+        return;
+      }
+      let lineCount = Math.max(1, text.split("\n").length),
+        pageHeightPoints = Math.max(newTextDialog.pageHeightPoints || 841.89, 1),
+        mark = {
+          id: Da(),
+          pageId: newTextDialog.pageId,
+          type: "text",
+          text,
+          x: newTextDialog.x,
+          y: newTextDialog.y,
+          w: 0.28,
+          h: Ee((lineCount * 12 * 1.4) / pageHeightPoints, 0.025, 0.22),
+          color: "#111111",
+          backgroundColor: "transparent",
+          size: 12,
+          fontSizeRatio: 12 / Math.max(newTextDialog.pageWidthPoints || 595.28, 1),
+          pageWidthPoints: newTextDialog.pageWidthPoints || 595.28,
+          font: "Arial",
+          cssFont: "Arial",
+          bold: !1,
+          italic: !1,
+          underline: !1,
+          crop: Pu(),
+        };
+      ((mark.x = Ee(mark.x, 0, 1 - mark.w)),
+        (mark.y = Ee(mark.y, 0, 1 - mark.h)),
+        aa((marks) => [...marks, mark]),
+        De(mark.id),
+        kl(!0),
+        setNewTextDialog(null),
+        setNewTextDraft(""),
+        Me("select"),
+        F("Texto nuevo añadido"));
+    },
     nx = (0, I.useCallback)(
       async (n) => {
         if (!$ || D.current) {
@@ -14602,30 +14643,19 @@ function cs() {
               (pageHeightPoints = sourceViewport.height));
           } catch {}
         }
+        if (W === "text") {
+          (setNewTextDraft(""),
+            setNewTextDialog({
+              pageId: $.id,
+              x: s.x,
+              y: s.y,
+              pageWidthPoints,
+              pageHeightPoints,
+            }));
+          return;
+        }
         let L =
-          W === "text"
-            ? {
-                id: Da(),
-                pageId: $.id,
-                type: "text",
-                text: "",
-                x: s.x,
-                y: s.y,
-                w: 0.28,
-                h: Ee((12 * 1.4) / pageHeightPoints, 0.025, 0.08),
-                color: "#111111",
-                backgroundColor: "transparent",
-                size: 12,
-                fontSizeRatio: 12 / pageWidthPoints,
-                pageWidthPoints,
-                font: "Arial",
-                cssFont: "Arial",
-                bold: !1,
-                italic: !1,
-                underline: !1,
-                crop: Pu(),
-              }
-            : {
+          {
                 id: Da(),
                 pageId: $.id,
                 type: W,
@@ -14651,16 +14681,7 @@ function cs() {
           aa((y) => [...y, L]),
           De(L.id),
           kl(!0),
-          Me(L.type === "text" ? "select" : W));
-        if (L.type === "text") {
-          (F("Escribe directamente; Intro mantiene cada salto de línea"),
-            setTimeout(() => {
-              let editor = document.querySelector(
-                `[data-mark-id="${L.id}"] .text-editor`,
-              );
-              editor?.focus();
-            }, 0));
-        }
+          Me(W));
       },
       [$, gn, aa, xn, W, highlightColor, highlightOpacity, redactColor, F],
     ),
@@ -16051,14 +16072,15 @@ function cs() {
           n.type === "text" &&
             (0, d.jsxs)(d.Fragment, {
               children: [
-                (0, d.jsx)("span", {
-                  className: "text-drag",
-                  title: "Mover texto",
-                  onPointerDown: (y) => Ln(y, n, "move"),
-                  onPointerMove: Cn,
-                  onPointerUp: yn,
-                  children: "\u22EE\u22EE",
-                }),
+                !n.replaceOriginal &&
+                  (0, d.jsx)("span", {
+                    className: "text-drag",
+                    title: "Mover texto",
+                    onPointerDown: (y) => Ln(y, n, "move"),
+                    onPointerMove: Cn,
+                    onPointerUp: yn,
+                    children: "\u22EE\u22EE",
+                  }),
                 (0, d.jsx)("span", {
                   className: "text-editor",
                   contentEditable: !0,
@@ -16153,6 +16175,7 @@ function cs() {
               }),
             }),
           zl === n.id &&
+            !n.replaceOriginal &&
             (0, d.jsx)("span", {
               className: "resize-handle",
               title: "Ampliar o reducir",
@@ -17457,10 +17480,10 @@ function cs() {
                   (0, d.jsxs)("button", {
                     className: W === "select" ? "active" : "",
                     onClick: activateNativeTextSelection,
-                    title: "Seleccionar texto; clic sin arrastrar para editar",
+                    title: "Selecciona texto existente; haz clic para editarlo directamente",
                     children: [
                       (0, d.jsx)(Uu, { size: 17 }),
-                      (0, d.jsx)("span", { children: "Seleccionar" }),
+                      (0, d.jsx)("span", { children: "Seleccionar texto" }),
                     ],
                   }),
                   (0, d.jsxs)("button", {
@@ -17491,6 +17514,7 @@ function cs() {
                   (0, d.jsxs)("button", {
                     className: W === "text" ? "active" : "",
                     onClick: () => Me("text"),
+                    title: "Crear un texto nuevo mediante cuadro de diálogo",
                     children: [
                       (0, d.jsx)(Al, { size: 17 }),
                       (0, d.jsx)("span", { children: "Texto" }),
@@ -18596,6 +18620,75 @@ onContextMenu:gx,onPointerDown:ix,
                   }),
                 ],
               }),
+        }),
+      newTextDialog &&
+        (0, d.jsx)("div", {
+          className: "modalback",
+          onClick: () => {
+            (setNewTextDialog(null), setNewTextDraft(""));
+          },
+          children: (0, d.jsxs)("div", {
+            className: "smallmodal new-text-modal",
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-labelledby": "new-text-title",
+            onClick: (event) => event.stopPropagation(),
+            onKeyDown: (event) => {
+              if (event.key === "Escape") {
+                (event.stopPropagation(),
+                  setNewTextDialog(null),
+                  setNewTextDraft(""));
+              }
+              if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                (event.preventDefault(), confirmNewText());
+              }
+            },
+            children: [
+              (0, d.jsx)("button", {
+                className: "modalx",
+                onClick: () => {
+                  (setNewTextDialog(null), setNewTextDraft(""));
+                },
+                "aria-label": "Cerrar",
+                children: "\xD7",
+              }),
+              (0, d.jsx)("h2", {
+                id: "new-text-title",
+                children: "Crear texto nuevo",
+              }),
+              (0, d.jsx)("p", {
+                children:
+                  "Escribe el texto que quieres añadir. Se creará en la posición elegida del documento.",
+              }),
+              (0, d.jsx)("textarea", {
+                autoFocus: !0,
+                value: newTextDraft,
+                onChange: (event) => setNewTextDraft(event.target.value),
+                placeholder: "Escribe aquí el texto nuevo",
+              }),
+              (0, d.jsx)("small", {
+                children: "Ctrl/Comando + Intro para crear el texto",
+              }),
+              (0, d.jsxs)("div", {
+                className: "modalactions",
+                children: [
+                  (0, d.jsx)("button", {
+                    className: "shortcut",
+                    onClick: () => {
+                      (setNewTextDialog(null), setNewTextDraft(""));
+                    },
+                    children: "Cancelar",
+                  }),
+                  (0, d.jsx)("button", {
+                    className: "blue",
+                    onClick: confirmNewText,
+                    disabled: !newTextDraft.trim(),
+                    children: "Crear texto",
+                  }),
+                ],
+              }),
+            ],
+          }),
         }),
       linkChoice &&
         (0, d.jsx)("div", {

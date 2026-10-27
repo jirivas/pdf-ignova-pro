@@ -4,9 +4,9 @@ PDF Ignova Pro is an Open Source Windows and macOS desktop application for profe
 
 ## Current public release
 
-**1.9.12** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
+**1.9.13** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
 
-The 1.9.12 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.13 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 
@@ -14,7 +14,9 @@ The 1.9.12 source passes the project smoke tests and functional OCR tests on Win
 - A dedicated Pages workspace with a clear thumbnail grid, drag-and-drop reordering and double-click navigation
 - A Combine files workspace for selecting or dropping several PDFs and turning them into one reorderable document
 - Creation of a new blank A4 PDF for building documents from pasted or added pages
-- Native PDF text editing that replaces the original text while editing instead of displaying a duplicate overlay
+- Separate native-text editing and new-text creation workflows
+- Select text edits the existing PDF text directly in place, without displaying a text box, frame or resize handles
+- The Text tool creates new content through a dedicated dialog
 - Text editing that preserves the original font, size, colour, rotation and page background whenever possible
 - Text and annotation tools with fixed-position multiline text, persistent font and text colour
 - Stable continuous selection of native PDF lines and paragraphs, with copy from the context menu, Edit menu or Ctrl+C/Command+C

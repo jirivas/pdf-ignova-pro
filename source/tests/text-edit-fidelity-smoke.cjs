@@ -72,6 +72,14 @@ assert.match(editor, /backgroundPatchData/);
 assert.match(editor, /sourceFontKey/);
 assert.match(editor, /No se pudo reutilizar la fuente incrustada del PDF/);
 assert.match(editor, /n\.textDirty \|\| n\.styleDirty \|\| zl === n\.id/);
+assert.match(editor, /\[newTextDialog, setNewTextDialog\]/);
+assert.match(editor, /className: "smallmodal new-text-modal"/);
+assert.match(editor, /children: "Crear texto nuevo"/);
+assert.match(editor, /if \(W === "text"\) \{/);
+assert.match(editor, /setNewTextDialog\(\{/);
+assert.match(editor, /F\("Edita directamente el texto seleccionado"\)/);
+assert.match(editor, /!n\.replaceOriginal &&\s*\(0, d\.jsx\)\("span", \{\s*className: "text-drag"/);
+assert.match(editor, /zl === n\.id &&\s*!n\.replaceOriginal &&\s*\(0, d\.jsx\)\("span", \{\s*className: "resize-handle"/);
 assert.match(editor, /className: `merge-pdf-button/);
 assert.match(editor, /children: "Unir archivos"/);
 assert.match(editor, /pagePanelOpen/);
@@ -92,6 +100,9 @@ assert.match(
   css,
   /\.mark\.text\.pdf-text-edit\.pdf-text-pristine\.chosen \.text-editor\s*\{\s*color:\s*inherit/,
 );
+assert.match(css, /\.mark\.text\.pdf-text-edit\.chosen\s*\{\s*outline:\s*0/);
+assert.match(css, /\.mark\.text\.pdf-text-edit \.text-editor:focus/);
+assert.match(css, /\.new-text-modal textarea/);
 assert.match(css, /\.merge-pdf-button/);
 assert.match(css, /\.single-page-organizer/);
 assert.match(css, /\.merge-workspace/);
