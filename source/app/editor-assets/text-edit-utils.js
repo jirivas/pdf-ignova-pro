@@ -207,61 +207,12 @@
     try {
       const image = context.getImageData(left, top, width, height);
       const appearance = estimateAppearance(image.data, width, height);
-      if (appearance.uniformBackground || typeof document === "undefined") {
-        return { ...appearance, backgroundPatchData: null };
-      }
-      const cleaned = new ImageData(
-        new Uint8ClampedArray(image.data),
-        width,
-        height,
-      );
-      const foregroundContrast = colorDistance(
-        appearance.foreground,
-        appearance.background,
-      );
-      for (let y = 0; y < height; y += 1) {
-        const leftOffset = (y * width) * 4;
-        const rightOffset = (y * width + width - 1) * 4;
-        const leftColor = [
-          image.data[leftOffset],
-          image.data[leftOffset + 1],
-          image.data[leftOffset + 2],
-        ];
-        const rightColor = [
-          image.data[rightOffset],
-          image.data[rightOffset + 1],
-          image.data[rightOffset + 2],
-        ];
-        for (let x = 0; x < width; x += 1) {
-          const offset = (y * width + x) * 4;
-          const color = [
-            image.data[offset],
-            image.data[offset + 1],
-            image.data[offset + 2],
-          ];
-          const foregroundDistance = colorDistance(color, appearance.foreground);
-          const backgroundDistance = colorDistance(color, appearance.background);
-          const isTextPixel =
-            foregroundContrast > 28 &&
-            foregroundDistance < Math.max(58, backgroundDistance * 0.88);
-          if (!isTextPixel) continue;
-          const ratio = width <= 1 ? 0 : x / (width - 1);
-          for (let channel = 0; channel < 3; channel += 1) {
-            cleaned.data[offset + channel] = Math.round(
-              leftColor[channel] * (1 - ratio) + rightColor[channel] * ratio,
-            );
-          }
-          cleaned.data[offset + 3] = 255;
-        }
-      }
-      const patch = document.createElement("canvas");
-      patch.width = width;
-      patch.height = height;
-      patch.getContext("2d")?.putImageData(cleaned, 0, 0);
-      return {
-        ...appearance,
-        backgroundPatchData: patch.toDataURL("image/png"),
-      };
+      // Never reuse a bitmap of the selected area as the replacement
+      // background. Even after pixel filtering, antialiased glyphs can remain
+      // in that bitmap and make the original text appear underneath the edit.
+      // An opaque fill using the detected page colour guarantees that only the
+      // edited text is visible, both in the editor and in the exported PDF.
+      return { ...appearance, backgroundPatchData: null };
     } catch {
       return null;
     }

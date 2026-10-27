@@ -13,7 +13,7 @@ const css = read("app/editor-assets/editor-entry.css");
 const i18nExtra = read("app/editor-assets/i18n-extra.js");
 const installer = read("installer/PDF-Ignova-Pro.iss");
 
-assert.equal(packageJson.version, "1.9.13");
+assert.equal(packageJson.version, "1.9.14");
 
 assert.match(editorHtml, /text-edit-utils\.js/);
 assert.match(editor, /PDF_IGNOVA_TEXT_EDIT/);
@@ -45,8 +45,10 @@ assert.match(editor, /combinedDocument/);
 assert.match(editor, /className: "smallmodal new-text-modal"/);
 assert.match(editor, /Edita directamente el texto seleccionado/);
 
-assert.match(installer, /PDF-Ignova-Pro-1\.9\.13-Setup-Windows-x64-unsigned/);
-assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.13.txt")));
-assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.13_MAC.txt")));
+assert.match(installer, /PDF-Ignova-Pro-1\.9\.14-Setup-Windows-x64-unsigned/);
+assert.match(editor, /backgroundPatchData: null/);
+assert.doesNotMatch(editor, /backgroundImage: n\.backgroundPatchData/);
+assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.14.txt")));
+assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.14_MAC.txt")));
 
-console.log("version 1.9.13 smoke test passed");
+console.log("version 1.9.14 smoke test passed");

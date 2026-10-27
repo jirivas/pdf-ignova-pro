@@ -1,0 +1,14 @@
+PDF IGNOVA PRO 1.9.14 — CAMBIOS PARA WINDOWS
+
+- Se corrige el texto duplicado que podía quedar visible al modificar contenido
+  existente con «Seleccionar texto».
+- La zona del texto original se cubre ahora con un fondo opaco antes de dibujar
+  la versión editada, tanto en pantalla como en el PDF exportado.
+- «Seleccionar texto» sigue modificando en la misma posición, sin abrir un
+  cuadro de texto, marco ni tiradores.
+- «Texto» queda reservado para crear contenido nuevo y abre un cuadro de diálogo
+  independiente antes de insertarlo en la página.
+- Se conservan el panel Páginas, la unión de archivos, el organizador de dos
+  paneles, OCR local, siete idiomas e impresión A4, A3, A2 y A1.
+
+Distribución pública sin firma digital. Windows puede mostrar SmartScreen.

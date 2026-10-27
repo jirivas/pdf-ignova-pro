@@ -13848,7 +13848,7 @@ function cs() {
             h: Ee(n.height / n.pageHeight + 0.006, 0.018, 1 - A),
             color: appearance?.textColor || "#111111",
             backgroundColor: appearance?.backgroundColor || "#ffffff",
-            backgroundPatchData: appearance?.backgroundPatchData || null,
+            backgroundPatchData: null,
             size: Ee(Math.round(n.fontSizePdf || n.height), 6, 144),
             fontSizeRatio:
               (n.fontSizePdf || n.height) /
@@ -15045,7 +15045,6 @@ function cs() {
         _ = await s.create(),
         pe = new Map(),
         xe = new Map(),
-        backgroundPatches = new Map(),
         fontkitRegistered = !1,
         Se = async (he) => {
           let R =
@@ -15183,47 +15182,13 @@ function cs() {
                 al = oe.height - (Ju.y + Ju.h) * oe.height;
               let coverWidth = Math.min(oe.width - ja, Ju.w * oe.width),
                 coverHeight = Math.min(oe.height - al, Ju.h * oe.height);
-              if (Y.backgroundPatchData) {
-                try {
-                  let patchImage = backgroundPatches.get(
-                    Y.backgroundPatchData,
-                  );
-                  if (!patchImage) {
-                    let patchBytes =
-                      window.PDF_IGNOVA_TEXT_EDIT?.dataUrlToBytes(
-                        Y.backgroundPatchData,
-                      );
-                    if (patchBytes?.length) {
-                      patchImage = await _.embedPng(patchBytes);
-                      backgroundPatches.set(Y.backgroundPatchData, patchImage);
-                    }
-                  }
-                  if (patchImage) {
-                    ne.drawImage(patchImage, {
-                      x: Math.max(0, ja),
-                      y: Math.max(0, al),
-                      width: coverWidth,
-                      height: coverHeight,
-                    });
-                  } else throw new Error("Fondo no disponible");
-                } catch {
-                  ne.drawRectangle({
-                    x: Math.max(0, ja),
-                    y: Math.max(0, al),
-                    width: coverWidth,
-                    height: coverHeight,
-                    color: k(Y.backgroundColor || "#ffffff"),
-                  });
-                }
-              } else {
-                ne.drawRectangle({
-                  x: Math.max(0, ja),
-                  y: Math.max(0, al),
-                  width: coverWidth,
-                  height: coverHeight,
-                  color: k(Y.backgroundColor || "#ffffff"),
-                });
-              }
+              ne.drawRectangle({
+                x: Math.max(0, ja),
+                y: Math.max(0, al),
+                width: coverWidth,
+                height: coverHeight,
+                color: k(Y.backgroundColor || "#ffffff"),
+              });
             }
             let textFont = await Se(Y),
               textSize = Math.max(
@@ -17835,11 +17800,6 @@ onContextMenu:gx,onPointerDown:ix,
                                     height: `${n.sourceRect.h * 100}%`,
                                     backgroundColor:
                                       n.backgroundColor || "#ffffff",
-                                    backgroundImage: n.backgroundPatchData
-                                      ? `url(${n.backgroundPatchData})`
-                                      : void 0,
-                                    backgroundSize: "100% 100%",
-                                    backgroundRepeat: "no-repeat",
                                   },
                                 },
                                 `cover-${n.id}`,

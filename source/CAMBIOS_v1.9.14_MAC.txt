@@ -1,0 +1,12 @@
+PDF IGNOVA PRO 1.9.14 — CAMBIOS PARA macOS
+
+- Se corrige el texto duplicado que podía quedar debajo de la edición: el texto
+  original se cubre con un fondo opaco antes de mostrar y exportar el nuevo.
+- «Seleccionar texto» modifica en la misma posición, sin cuadro superpuesto,
+  marco ni tiradores.
+- «Texto» crea contenido nuevo mediante un cuadro de diálogo independiente.
+- Se mantienen el panel Páginas, la unión de archivos, el organizador de dos
+  paneles, OCR con Vision, siete idiomas e impresión A4, A3, A2 y A1.
+
+DMG universal para Apple Silicon e Intel, con firma ad hoc y sin notarización.
+macOS puede pedir confirmación al abrir la aplicación por primera vez.

@@ -55,6 +55,32 @@ appearance = helpers.estimateAppearance(
 assert.equal(appearance.backgroundColor, "#142d64");
 assert.equal(appearance.textColor, "#fafafa");
 
+const fakeCanvas = {
+  width: 12,
+  height: 8,
+  clientWidth: 12,
+  clientHeight: 8,
+  getContext() {
+    return {
+      getImageData() {
+        return {
+          data: makePixels(12, 8, [255, 255, 255], [15, 15, 15]),
+        };
+      },
+    };
+  },
+};
+appearance = helpers.captureTextAppearance(fakeCanvas, {
+  left: 0,
+  top: 0,
+  width: 12,
+  height: 8,
+  pageWidth: 12,
+  pageHeight: 8,
+});
+assert.equal(appearance.backgroundColor, "#ffffff");
+assert.equal(appearance.backgroundPatchData, null);
+
 const editor = fs.readFileSync(
   path.join(root, "app/editor-assets/editor-entry.js"),
   "utf8",
@@ -69,6 +95,8 @@ assert.match(html, /text-edit-utils\.js/);
 assert.match(editor, /createTextRange/);
 assert.match(editor, /captureTextAppearance/);
 assert.match(editor, /backgroundPatchData/);
+assert.match(editor, /backgroundPatchData: null/);
+assert.doesNotMatch(editor, /backgroundImage: n\.backgroundPatchData/);
 assert.match(editor, /sourceFontKey/);
 assert.match(editor, /No se pudo reutilizar la fuente incrustada del PDF/);
 assert.match(editor, /n\.textDirty \|\| n\.styleDirty \|\| zl === n\.id/);
@@ -103,6 +131,8 @@ assert.match(
 assert.match(css, /\.mark\.text\.pdf-text-edit\.chosen\s*\{\s*outline:\s*0/);
 assert.match(css, /\.mark\.text\.pdf-text-edit \.text-editor:focus/);
 assert.match(css, /\.new-text-modal textarea/);
+assert.match(css, /\.pdf-original-cover\s*\{[^}]*z-index:\s*1/s);
+assert.match(css, /\.marklayer > \.mark,[^}]*z-index:\s*2/s);
 assert.match(css, /\.merge-pdf-button/);
 assert.match(css, /\.single-page-organizer/);
 assert.match(css, /\.merge-workspace/);
