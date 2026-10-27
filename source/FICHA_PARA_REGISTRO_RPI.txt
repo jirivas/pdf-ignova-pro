@@ -1,7 +1,7 @@
 FICHA PREPARATORIA PARA EL REGISTRO DE LA PROPIEDAD INTELECTUAL
 
 Título: PDF Ignova Pro
-Versión depositable: 1.9.15
+Versión depositable: 1.9.16
 Tipo de obra: programa de ordenador
 Autor declarado: José Ignacio Rivas Negreira
 Titular declarado: José Ignacio Rivas Negreira / IGNOVA Ingeniería
@@ -14,7 +14,7 @@ Aplicación de escritorio para Windows y macOS destinada a visualizar, organizar
 editar, convertir, imprimir, aplicar OCR, firmar y exportar documentos PDF.
 
 Contenido identificativo:
-- código y recursos de la versión 1.9.15;
+- código y recursos de la versión 1.9.16;
 - licencia GPL y avisos de terceros;
 - manifiesto SHA-256 de los archivos entregados; y
 - documentación de autoría y marca.

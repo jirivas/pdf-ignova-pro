@@ -13131,6 +13131,7 @@ function PdfEditableTextLayer({
   width: t,
   enabled: l,
   editingText,
+  replacements = [],
   onPick: u,
   onLink,
   onSelection,
@@ -13140,9 +13141,16 @@ function PdfEditableTextLayer({
     [selectedKeys, setSelectedKeys] = (0, I.useState)(new Set()),
     dragSelection = (0, I.useRef)(null),
     suppressClick = (0, I.useRef)(!1),
+    selectionItems = o.map((item) => {
+      let replacement = replacements.find((mark) =>
+        mark.sourceTextKey === `${a?.docId}:${a?.index}:${item.key}` &&
+        (mark.textDirty || mark.styleDirty),
+      );
+      return replacement ? { ...item, text: replacement.text } : item;
+    }),
     updateControlledSelection = (anchorKey, focusKey) => {
       let range = window.PDF_IGNOVA_TEXT_EDIT?.createTextRange(
-        o,
+        selectionItems,
         anchorKey,
         focusKey,
       );
@@ -13184,6 +13192,11 @@ function PdfEditableTextLayer({
       dragSelection.current = null;
     };
   return (
+    (0, I.useEffect)(() => {
+      setSelectedKeys(new Set());
+      dragSelection.current = null;
+      suppressClick.current = !1;
+    }, [editingText]),
     (0, I.useEffect)(() => {
       let i = !1;
       return (
@@ -13257,6 +13270,10 @@ function PdfEditableTextLayer({
                     pageWidthPoints: C.width,
                     pageWidth: b.width,
                     pageHeight: b.height,
+                    sourcePdfBaseline: {
+                      start: b.convertToPdfPoint(p[4], p[5]),
+                      end: b.convertToPdfPoint(p[4] + Math.cos(g) * S, p[5] + Math.sin(g) * S),
+                    },
                     link:
                       window.PDF_IGNOVA_LINKS?.detectTextLink(z.str) || null,
                   };
@@ -13356,10 +13373,10 @@ function PdfEditableTextLayer({
     }, [e, a?.docId, a?.index, a?.baseRotation, a?.rotation, t, l]),
     l &&
       (0, d.jsx)("div", {
-        className: "pdf-text-layer",
+        className: `pdf-text-layer ${editingText ? "pdf-modify-layer" : ""}`,
         "aria-label": "Texto editable del PDF",
         children: [
-          o.map((i) =>
+          (editingText ? o : selectionItems).map((i) =>
             (0, d.jsx)(
               "span",
               {
@@ -13696,12 +13713,15 @@ function cs() {
       (Me("select"),
         De(null),
         setScreenSelection(null),
+        setNativeSelectionText(""),
+        window.getSelection?.()?.removeAllRanges?.(),
         F("Arrastra sobre texto o marca una zona de la página"));
     }, [F]),
     activatePdfTextModification = (0, I.useCallback)(() => {
       (Me("modify-text"),
         De(null),
         setNativeSelectionText(""),
+        window.getSelection?.()?.removeAllRanges?.(),
         F("Haz clic en el texto del PDF que quieres modificar"));
     }, [F]),
     El = (0, I.useCallback)((n) => {
@@ -13823,7 +13843,8 @@ function cs() {
     ),
     wx = (0, I.useCallback)(
       (n) => {
-        if (!$ || W !== "modify-text") return;
+        if (!$) return;
+        Me("modify-text");
         let s = `${$.docId}:${$.index}:${n.key}`,
           L = f.current.find(
             (k) => k.pageId === $.id && k.sourceTextKey === s,
@@ -13834,7 +13855,7 @@ function cs() {
             setTimeout(
               () =>
                 document
-                  .querySelector(".right .editor-properties textarea")
+                  .querySelector(`[data-mark-id="${L.id}"] .text-editor`)
                   ?.focus(),
               0,
             ));
@@ -13888,17 +13909,18 @@ function cs() {
             replaceOriginal: !0,
             sourceTextKey: s,
             sourceText: n.text,
+            sourcePdfBaseline: n.sourcePdfBaseline,
             sourceRect: { x: R, y: ne, w: oe, h: Y },
             crop: Pu(),
           };
         (aa((_) => [..._, k]),
           De(k.id),
           kl(!0),
-          F("Modifica el texto en el panel derecho; no se crea ningún cuadro"),
+          F("Edita sobre el texto: borra o escribe. Pulsa fuera para terminar"),
           setTimeout(
             () =>
               document
-                .querySelector(".right .editor-properties textarea")
+                .querySelector(`[data-mark-id="${k.id}"] .text-editor`)
                 ?.focus(),
             0,
           ));
@@ -15241,7 +15263,15 @@ function cs() {
           if (!Y) continue;
           ((R = await s.load(Y.bytes)), pe.set(he.docId, R));
         }
-        let [ne] = await _.copyPages(R, [he.index]);
+        const replacements = f.current.filter(mark => mark.pageId === he.id && mark.replaceOriginal && (mark.textDirty || mark.styleDirty));
+        let pageSource = R;
+        if (replacements.length) {
+          if (!window.pdfEstudio?.removeOriginalText) throw new Error("La sustitución del texto requiere la versión de escritorio actualizada");
+          const original = g.find(source => source.id === he.docId);
+          const cleaned = await window.pdfEstudio.removeOriginalText(original.bytes, he.index, replacements);
+          pageSource = await s.load(new Uint8Array(cleaned));
+        }
+        let [ne] = await _.copyPages(pageSource, [he.index]);
         (_.addPage(ne),
           ne.setRotation(y(ss(ne.getRotation().angle + he.rotation))));
         let oe = ne.getSize();
@@ -15256,25 +15286,8 @@ function cs() {
           let ga = Y.x * oe.width,
             Nl = oe.height - (Y.y + Y.h) * oe.height;
           if (Y.type === "text" || Y.type === "watermark") {
-            if (Y.replaceOriginal) {
-              let Ju = Y.sourceRect || {
-                  x: Y.x,
-                  y: Y.y,
-                  w: Y.w,
-                  h: Y.h,
-                },
-                ja = Ju.x * oe.width,
-                al = oe.height - (Ju.y + Ju.h) * oe.height;
-              let coverWidth = Math.min(oe.width - ja, Ju.w * oe.width),
-                coverHeight = Math.min(oe.height - al, Ju.h * oe.height);
-              ne.drawRectangle({
-                x: Math.max(0, ja),
-                y: Math.max(0, al),
-                width: coverWidth,
-                height: coverHeight,
-                color: k(Y.backgroundColor || "#ffffff"),
-              });
-            }
+            // Native glyphs were removed before copying this page. Draw only
+            // the replacement; no rectangle or old invisible text is exported.
             let textFont = await Se(Y),
               textSize = Math.max(
                 4,
@@ -15429,7 +15442,7 @@ function cs() {
             (rs(pdfBytes, fileName, "application/pdf"), F("PDF guardado"));
           }
         } catch (s) {
-          (console.error(s), F("No se pudo guardar el PDF"));
+          (console.error(s), F(`No se pudo guardar el PDF: ${s?.message || "error desconocido"}`));
         } finally {
           saveDialogInProgress.current = !1;
           pa("");
@@ -16084,7 +16097,7 @@ function cs() {
     return (0, d.jsxs)(
       "div",
       {
-        className: `mark ${n.type} ${n.replaceOriginal ? "pdf-text-edit" : ""} ${n.replaceOriginal && !n.textDirty && !n.styleDirty ? "pdf-text-pristine" : ""} ${zl === n.id ? "chosen" : ""}`,
+        className: `mark ${n.type} ${n.replaceOriginal ? "pdf-text-edit" : ""} ${n.replaceOriginal && !n.textDirty && !n.styleDirty ? "pdf-text-pristine" : ""} ${zl === n.id ? "chosen" : ""} ${n.replaceOriginal && W === "modify-text" ? "pdf-modify-mode" : ""}`,
         "data-mark-id": n.id,
         style: {
           left: `${n.x * 100}%`,
@@ -16092,10 +16105,12 @@ function cs() {
           width: `${n.w * 100}%`,
           height: `${n.h * 100}%`,
           color: n.color,
+          visibility: n.replaceOriginal && !n.textDirty && !n.styleDirty && !(W === "modify-text" && zl === n.id) ? "hidden" : "visible",
+          pointerEvents: n.replaceOriginal && W !== "modify-text" ? "none" : void 0,
           background:
             n.type === "text"
               ? n.replaceOriginal &&
-                (n.textDirty || n.styleDirty || zl === n.id)
+                (n.textDirty || n.styleDirty || (W === "modify-text" && zl === n.id))
                 ? n.backgroundColor || "#ffffff"
                 : "transparent"
               : n.type === "image" || n.type === "watermark"
@@ -16104,7 +16119,7 @@ function cs() {
           boxShadow:
             n.type === "text" &&
             n.replaceOriginal &&
-            (n.textDirty || n.styleDirty || zl === n.id)
+            (n.textDirty || n.styleDirty || (W === "modify-text" && zl === n.id))
               ? `0 0 0 2px ${n.backgroundColor || "#ffffff"}`
               : void 0,
           fontSize: displayFontSize,
@@ -16128,6 +16143,8 @@ function cs() {
         onContextMenu: (y) => Es(y, n),
         onClick: (y) => {
           (y.stopPropagation(), W !== "draw" && De(n.id));
+          if (n.replaceOriginal && W === "modify-text")
+            y.currentTarget.querySelector(".text-editor")?.focus();
         },
         children: [
           n.type === "text" &&
@@ -16144,12 +16161,18 @@ function cs() {
                   }),
                 (0, d.jsx)("span", {
                   className: `text-editor ${n.replaceOriginal ? "pdf-text-replacement" : ""}`,
-                  contentEditable: !n.replaceOriginal,
+                  contentEditable: n.replaceOriginal ? W === "modify-text" && zl === n.id : !0,
+                  "data-i18n-ignore": "true",
+                  ref: (element) => {
+                    if (element && document.activeElement !== element && element.textContent !== n.text)
+                      element.textContent = n.text;
+                  },
                   suppressContentEditableWarning: !0,
                   spellCheck: !1,
                   "data-placeholder": n.text ? void 0 : "Escribe aquí",
                   style: {
                     color: n.color,
+                    pointerEvents: n.replaceOriginal && W !== "modify-text" ? "none" : "auto",
                     fontFamily: n.cssFont || n.font,
                     fontWeight: n.bold ? 700 : 400,
                     fontStyle: n.italic ? "italic" : "normal",
@@ -16158,23 +16181,28 @@ function cs() {
                   onPointerDown: (y) => {
                     W !== "draw" && (y.stopPropagation(), De(n.id));
                   },
-                  onFocus: n.replaceOriginal ? void 0 : Te,
-                  onInput: n.replaceOriginal ? void 0 : (y) => {
+                  onFocus: Te,
+                  onInput: (y) => {
                     ((y.currentTarget.dataset.pdfTextUserEdited = "1"),
                       y.currentTarget
                         .closest(".mark")
                         ?.classList.add("pdf-text-live-edit"));
+                    let text = (y.currentTarget.innerText || "").replace(/\r/g, "");
+                    ma(n.id, {
+                      text,
+                      textDirty: n.replaceOriginal ? text !== n.sourceText : !0,
+                    });
                   },
-                  onPaste: n.replaceOriginal ? void 0 : (y) => {
+                  onPaste: (y) => {
                     let A = y.clipboardData?.getData("text/plain");
                     if (typeof A !== "string") return;
                     (y.preventDefault(),
                       document.execCommand("insertText", !1, A));
                   },
-                  onKeyDown: n.replaceOriginal ? void 0 : (y) => {
+                  onKeyDown: (y) => {
                     y.key === "Escape" && y.currentTarget.blur();
                   },
-                  onBlur: n.replaceOriginal ? void 0 : (y) => {
+                  onBlur: (y) => {
                     let A = (y.currentTarget.innerText || "").replace(/\r/g, ""),
                       k = y.currentTarget.dataset.pdfTextUserEdited === "1",
                       lineCount = Math.max(1, A.split("\n").length),
@@ -16210,7 +16238,6 @@ function cs() {
                         : !0,
                     });
                   },
-                  children: n.text,
                 }),
               ],
             }),
@@ -17562,7 +17589,7 @@ function cs() {
                     ],
                   }),
                   (0, d.jsxs)("button", {
-                    className: W === "modify-text" ? "active" : "",
+                    className: W === "modify-text" ? "active modify-text-active" : "",
                     onClick: activatePdfTextModification,
                     title: "Modificar el texto existente del PDF, sin crear texto nuevo",
                     children: [
@@ -17883,6 +17910,7 @@ onContextMenu:gx,onPointerDown:ix,
                           width: Math.round((680 * Cf) / 100),
                           enabled: W === "select" || W === "modify-text",
                           editingText: W === "modify-text",
+                          replacements: T.filter((mark) => mark.pageId === $.id && mark.replaceOriginal),
                           onPick: wx,
                           onLink: handlePdfLink,
                           onSelection: setNativeSelectionText,
@@ -17919,7 +17947,7 @@ onContextMenu:gx,onPointerDown:ix,
                                 n.type === "text" &&
                                 n.replaceOriginal &&
                                 n.sourceRect &&
-                                (n.textDirty || n.styleDirty || zl === n.id),
+                                (n.textDirty || n.styleDirty || (W === "modify-text" && zl === n.id)),
                             ).map((n) =>
                               (0, d.jsx)(
                                 "span",
@@ -18051,7 +18079,7 @@ onContextMenu:gx,onPointerDown:ix,
                                 (0, d.jsx)("small", {
                                   className: "existing-text-help",
                                   children:
-                                    "El texto se sustituye en su posición original; no se crea un cuadro nuevo sobre la página.",
+                                    "Escribe o borra directamente en el texto de la página. La selección de edición es verde.",
                                 }),
                               (0, d.jsx)("textarea", {
                                 value: U.text,

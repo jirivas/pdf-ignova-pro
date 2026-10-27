@@ -1,0 +1,7 @@
+PDF IGNOVA PRO 1.9.16 — macOS
+
+Comparte la corrección del motor de texto documentada en CAMBIOS_v1.9.16.txt.
+Edición directa con cursor y selección verde; selección normal azul; retirada
+del texto original del contenido PDF al guardar y reapertura sin copias ocultas.
+
+DMG universal para Apple Silicon e Intel, firmado ad hoc y sin notarización.

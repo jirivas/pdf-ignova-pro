@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("pdfEstudio", {
   platform: process.platform,
+  removeOriginalText: (bytes, pageIndex, edits) => ipcRenderer.invoke("remove-original-text", bytes, pageIndex, edits),
   signPdf: payload => ipcRenderer.invoke("sign-pdf", payload),
   readClipboardImage: () => ipcRenderer.invoke("read-clipboard-image"),
   chooseAndConvertDocuments: () => ipcRenderer.invoke("choose-and-convert-documents"),

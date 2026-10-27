@@ -220,8 +220,30 @@
 .mark.text.pdf-text-edit .pdf-text-replacement {
   position: relative;
   z-index: 2;
-  pointer-events: none;
-  user-select: none;
+  pointer-events: auto;
+  user-select: text;
+}
+
+.toolbar button.modify-text-active,
+.toolbar button.modify-text-active:hover {
+  background: #16803c;
+  color: #fff;
+}
+
+.pdf-text-edit.pdf-modify-mode.chosen .text-editor {
+  color: inherit;
+  caret-color: #16803c;
+  outline: 1px solid #16803c;
+}
+
+.pdf-text-edit .text-editor::selection {
+  background: #b8e8c7;
+  color: inherit;
+}
+
+.pdf-modify-layer .pdf-text-hit:hover {
+  outline-color: #16803c;
+  background: #16803c1a;
 }
 
 .pdf-original-cover {

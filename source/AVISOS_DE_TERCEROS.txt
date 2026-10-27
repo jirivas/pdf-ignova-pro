@@ -22,6 +22,10 @@ COMPONENTES PRINCIPALES
 - pako 1.0.11 — MIT y zlib.
 - tslib 1.14.1 — 0BSD.
 - buffer 6.0.3 — MIT.
+- ts-pdf-edit 0.1.2 — MIT, Copyright (c) 2026 FlowDot LLC.
+  Se utiliza su intérprete y analizador de operadores para retirar caracteres
+  originales conservando el avance del texto. Su licencia y avisos completos
+  se distribuyen en node_modules/ts-pdf-edit/LICENSE dentro de la aplicación.
 
 Los nombres y marcas de terceros pertenecen a sus respectivos titulares. Su inclusión
 no implica patrocinio ni asociación comercial con PDF Ignova Pro o IGNOVA Ingeniería.

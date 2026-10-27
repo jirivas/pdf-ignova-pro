@@ -1,0 +1,20 @@
+PDF IGNOVA PRO 1.9.16 — CORRECCIÓN DEL MOTOR DE TEXTO
+
+- Modificar texto permite colocar el cursor, borrar letras y escribir en la
+  propia página, conservando la fuente detectada. Su indicador es verde.
+- Seleccionar sigue siendo azul y copia el texto actual sin entrar en edición.
+- Una sustitución sin cambios se oculta al terminar. Se corrige la prioridad
+  del color que dejaba visible una segunda copia del texto original.
+- Se corrige la capa que interceptaba los clics y la dependencia de un panel
+  lateral que podía estar oculto en ventanas pequeñas.
+- Al guardar se retiran los caracteres originales del flujo PDF antes de
+  insertar la sustitución. El texto antiguo ya no queda oculto debajo ni
+  reaparece en la selección al volver a abrir el archivo.
+- Si una estructura PDF no permite retirar el original con seguridad, el
+  guardado informa del problema y no genera silenciosamente una copia tapada.
+- Pruebas funcionales en navegador: seleccionar, borrar y escribir, repetir
+  edición, copiar texto actualizado, ventana estrecha, guardar, reabrir y vaciar.
+- Pruebas del motor con operadores Tj y matrices TJ, manteniendo la posición
+  del texto vecino.
+
+Instalador de Windows sin firma comercial.

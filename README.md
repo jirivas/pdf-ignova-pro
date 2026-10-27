@@ -4,9 +4,9 @@ PDF Ignova Pro is an Open Source Windows and macOS desktop application for profe
 
 ## Current public release
 
-**1.9.15** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
+**1.9.16** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
 
-The 1.9.15 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.16 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 

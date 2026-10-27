@@ -1,12 +1,14 @@
 {
   "name": "pdf-ignova-pro-desktop",
-  "version": "1.9.15",
+  "version": "1.9.16",
   "description": "Editor PDF profesional de escritorio para Windows y macOS — IGNOVA Ingeniería",
   "main": "main.cjs",
   "private": false,
   "author": "José Ignacio Rivas Negreira — IGNOVA Ingeniería",
   "scripts": {
-    "test": "node --check main.cjs && node --check commercial-license.cjs && node --check license-core.cjs && node --check native-i18n.cjs && node --check print-paper.cjs && node --check preload.cjs && node --check app/editor-assets/editor-entry.js && node --check app/editor-assets/link-utils.js && node --check app/editor-assets/text-selection-utils.js && node --check app/editor-assets/text-edit-utils.js && node --check app/editor-assets/i18n-extra.js && node --check app/editor-assets/i18n-data.js && node --check app/editor-assets/i18n.js && node --check app/editor-assets/search-engine.mjs && node --check app/editor-assets/toolbar-customizer.js && node --check app/print-entry.js && node tests/license-core-smoke.cjs && node tests/i18n-smoke.cjs && node tests/print-paper-smoke.cjs && node tests/search-all-pages-smoke.mjs && node tests/link-actions-smoke.cjs && node tests/text-selection-zoom-smoke.cjs && node tests/text-edit-fidelity-smoke.cjs && node tests/macos-platform-smoke.cjs && node tests/version-1915-smoke.cjs",
+    "test:browser": "node tests/text-edit-browser.cjs",
+    "test:native-text": "node --check native-text-rewrite.cjs && node tests/native-text-rewrite.cjs",
+    "test": "node --check main.cjs && node --check commercial-license.cjs && node --check license-core.cjs && node --check native-i18n.cjs && node --check print-paper.cjs && node --check preload.cjs && node --check app/editor-assets/editor-entry.js && node --check app/editor-assets/link-utils.js && node --check app/editor-assets/text-selection-utils.js && node --check app/editor-assets/text-edit-utils.js && node --check app/editor-assets/i18n-extra.js && node --check app/editor-assets/i18n-data.js && node --check app/editor-assets/i18n.js && node --check app/editor-assets/search-engine.mjs && node --check app/editor-assets/toolbar-customizer.js && node --check app/print-entry.js && node tests/license-core-smoke.cjs && node tests/i18n-smoke.cjs && node tests/print-paper-smoke.cjs && node tests/search-all-pages-smoke.mjs && node tests/link-actions-smoke.cjs && node tests/text-selection-zoom-smoke.cjs && node tests/text-edit-fidelity-smoke.cjs && node tests/macos-platform-smoke.cjs && node tests/version-1916-smoke.cjs",
     "package:windows": "electron-packager . \"PDF Ignova Pro\" --platform=win32 --arch=x64 --out=release --overwrite --asar.unpackDir=scripts --prune=true --icon=app/icon.ico --ignore=\"^/(release|release-installer|tests|installer)$\"",
     "package:mac": "electron-packager . \"PDF Ignova Pro\" --platform=darwin --arch=universal --out=release-mac --overwrite --asar.unpackDir=scripts --prune=true --icon=app/icon.icns --app-bundle-id=com.ignova.pdf-ignova-pro --app-category-type=public.app-category.productivity --extend-info=macos/Info.plist --ignore=\"^/(release|release-installer|release-mac|tests|installer|macos)$\"",
     "start": "electron ."
@@ -19,6 +21,7 @@
     "esbuild": "0.27.3",
     "lucide-react": "0.468.0",
     "pdfjs-dist": "5.4.296",
+    "playwright": "1.62.1",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "xlsx": "0.18.5"
@@ -27,7 +30,8 @@
     "@signpdf/placeholder-pdf-lib": "3.3.0",
     "@signpdf/signer-p12": "3.3.0",
     "@signpdf/signpdf": "3.3.0",
-    "pdf-lib": "1.17.1"
+    "pdf-lib": "1.17.1",
+    "ts-pdf-edit": "0.1.2"
   },
   "productName": "PDF Ignova Pro",
   "license": "GPL-3.0-or-later"
