@@ -71,8 +71,15 @@ assert.match(editor, /captureTextAppearance/);
 assert.match(editor, /backgroundPatchData/);
 assert.match(editor, /sourceFontKey/);
 assert.match(editor, /No se pudo reutilizar la fuente incrustada del PDF/);
-assert.match(editor, /className: "merge-pdf-button"/);
-assert.match(editor, /children: "Fusionar PDF"/);
+assert.match(editor, /n\.textDirty \|\| n\.styleDirty \|\| zl === n\.id/);
+assert.match(editor, /className: `merge-pdf-button/);
+assert.match(editor, /children: "Unir archivos"/);
+assert.match(editor, /pagePanelOpen/);
+assert.match(editor, /mergePanelOpen/);
+assert.match(editor, /className: "single-page-organizer"/);
+assert.match(editor, /className: "merge-file-dropzone"/);
+assert.match(editor, /n === "combine"/);
+assert.match(editor, /PDF combinado\.pdf/);
 assert.match(editor, /zoomWheelAnchor/);
 assert.match(editor, /contentX: s\.scrollLeft \+ offsetX/);
 assert.match(editor, /addEventListener\("wheel", handleWheel, \{ passive: !1 \}\)/);
@@ -81,7 +88,13 @@ assert.match(editor, /selectOrganizerPage/);
 assert.match(editor, /event\.ctrlKey \|\| event\.metaKey/);
 assert.match(editor, /\$\{isSelected \? "selected" : ""\}/);
 assert.match(css, /\.pdf-text-hit\.pdf-text-selected/);
+assert.match(
+  css,
+  /\.mark\.text\.pdf-text-edit\.pdf-text-pristine\.chosen \.text-editor\s*\{\s*color:\s*inherit/,
+);
 assert.match(css, /\.merge-pdf-button/);
+assert.match(css, /\.single-page-organizer/);
+assert.match(css, /\.merge-workspace/);
 assert.match(css, /\.dual-page-card\.selected/);
 
 console.log("text editing fidelity and paragraph selection smoke test passed");

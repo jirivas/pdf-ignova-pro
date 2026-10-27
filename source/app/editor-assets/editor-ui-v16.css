@@ -187,6 +187,10 @@
   caret-color: #111;
 }
 
+.mark.text.pdf-text-edit.pdf-text-pristine.chosen .text-editor {
+  color: inherit;
+}
+
 .mark.text.pdf-text-edit.pdf-text-pristine:not(.pdf-text-live-edit) .text-editor:focus {
   background: transparent;
 }
@@ -745,6 +749,138 @@
   border-color: #1268e8;
   background: #e5f0ff;
   color: #075cc9;
+}
+
+.merge-pdf-button.active {
+  border-color: #1268e8;
+  background: #1268e8;
+  color: #fff;
+}
+
+.stage.page-panel-stage,
+.stage.merge-panel-stage {
+  display: block;
+  padding: 14px;
+  touch-action: auto;
+}
+
+.single-page-organizer {
+  width: 100%;
+  min-width: 560px;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(520px, 1fr);
+  gap: 9px;
+}
+
+.single-page-organizer .dual-page-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.single-page-organizer .dual-page-card {
+  min-height: 220px;
+}
+
+.merge-workspace {
+  width: 100%;
+  min-width: 620px;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+}
+
+.merge-file-dropzone {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding: 22px 20px;
+  border: 2px dashed #92afd4;
+  border-radius: 12px;
+  background: #f5f8fe;
+  text-align: center;
+}
+
+.merge-file-dropzone h2 {
+  margin: 0;
+  color: #253754;
+  font-size: 23px;
+}
+
+.merge-file-dropzone p {
+  max-width: 680px;
+  margin: 0;
+  color: #647086;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.merge-file-dropzone button {
+  min-width: 310px;
+  min-height: 48px;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: #1268e8;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.merge-file-dropzone button:hover {
+  background: #0759c9;
+}
+
+.merge-file-dropzone small {
+  color: #6c7480;
+  font-size: 9px;
+}
+
+.merge-result-panel {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+}
+
+.merge-result-help {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  border: 1px solid #c7d7ec;
+  border-radius: 8px;
+  background: #fff;
+  color: #244f85;
+  font-size: 10px;
+}
+
+.merge-result-help span {
+  flex: 1;
+  color: #667387;
+}
+
+.merge-result-help b {
+  white-space: nowrap;
+}
+
+.merge-result-panel .dual-page-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.merge-empty-result {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d7dce4;
+  border-radius: 10px;
+  background: #fff;
+  color: #7a8290;
+  font-size: 11px;
 }
 
 .stage.overview-stage {

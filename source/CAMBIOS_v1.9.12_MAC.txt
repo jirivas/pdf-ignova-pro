@@ -1,0 +1,13 @@
+PDF IGNOVA PRO 1.9.12 — CAMBIOS PARA macOS
+
+- «Seleccionar texto» sustituye visualmente el texto original durante la edición,
+  sin mostrar una copia superpuesta.
+- Nuevo panel «Páginas» con cuadrícula de miniaturas, reordenación por arrastre y
+  apertura con doble clic.
+- Nuevo panel «Unir archivos» para seleccionar o soltar varios PDF, formar un
+  único documento y reordenar sus páginas antes de guardarlo.
+- Se mantienen el organizador de dos paneles, guardado seguro, OCR con Vision,
+  siete idiomas, zoom hasta 500 % e impresión A4, A3, A2 y A1.
+
+DMG universal para Apple Silicon e Intel, con firma ad hoc y sin notarización.
+macOS puede pedir confirmación al abrir la aplicación por primera vez.

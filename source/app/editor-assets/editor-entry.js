@@ -13478,6 +13478,7 @@ function SearchHighlightLayer({ results: e, pageId: a, currentIndex: t }) {
 function cs() {
   let e = (0, I.useRef)(null),
     a = (0, I.useRef)(null),
+    mergeBuilderInput = (0, I.useRef)(null),
     t = (0, I.useRef)(null),
     l = (0, I.useRef)(null),
     u = (0, I.useRef)(null),
@@ -13513,6 +13514,8 @@ function cs() {
     [W, Me] = (0, I.useState)("hand"),
     [Cf, Gu] = (0, I.useState)(82),
     [dualPanelOpen, setDualPanelOpen] = (0, I.useState)(!1),
+    [pagePanelOpen, setPagePanelOpen] = (0, I.useState)(!1),
+    [mergePanelOpen, setMergePanelOpen] = (0, I.useState)(!1),
     [dualPageSelections, setDualPageSelections] = (0, I.useState)({}),
     [pageNumberDraft, setPageNumberDraft] = (0, I.useState)("1"),
     [hs, yf] = (0, I.useState)(!0),
@@ -13976,7 +13979,32 @@ function cs() {
             }
             k.push({ id: Da(), name: _.name, pages: Se, marks: [] });
           }
-          if ((S((_) => [..._, ...y]), s === "open" || !Q)) {
+          S((_) => [..._, ...y]);
+          if (s === "combine") {
+            let combinedDocument = {
+                id: Da(),
+                name:
+                  L.length === 1
+                    ? L[0].name
+                    : "PDF combinado.pdf",
+                pages: A,
+                marks: [],
+              },
+              pe = [
+                ...i.current.map((xe) =>
+                  xe.id === Q
+                    ? { ...xe, pages: Wt(o.current), marks: Lt(f.current) }
+                    : xe,
+                ),
+                combinedDocument,
+              ];
+            ((i.current = pe),
+              G(pe),
+              El(combinedDocument),
+              F(
+                `${L.length} PDF unidos en un documento de ${A.length} páginas`,
+              ));
+          } else if (s === "open" || !Q) {
             let pe = [
               ...i.current.map((xe) =>
                 xe.id === Q
@@ -14012,7 +14040,7 @@ function cs() {
     ),
     Jx = async (n, s) => {
       if (!s?.length) {
-        (n === "open" ? e : a).current?.click();
+        (n === "open" ? e : n === "combine" ? mergeBuilderInput : a).current?.click();
         return;
       }
       let L = Array.from(s),
@@ -16179,12 +16207,18 @@ function cs() {
             (0, d.jsx)("div", {
               className: "dual-page-grid",
               onDragOver: (event) => event.preventDefault(),
-              onDrop: (event) =>
+              onDrop: (event) => {
+                if (mergePanelOpen && event.dataTransfer.files?.length) {
+                  (event.preventDefault(), event.stopPropagation());
+                  Jx(Q ? "merge" : "combine", event.dataTransfer.files);
+                  return;
+                }
                 transferPagesBetweenPanels(
                   event,
                   documentItem.id,
                   documentItem.pages.length,
-                ),
+                );
+              },
               children: [
                 ...documentItem.pages.map((page, pageIndex) => {
                   let source = g.find((item) => item.id === page.docId),
@@ -16220,12 +16254,24 @@ function cs() {
                           (event.dataTransfer.effectAllowed = "copyMove"));
                       },
                       onDragOver: (event) => event.preventDefault(),
-                      onDrop: (event) =>
+                      onDrop: (event) => {
+                        if (
+                          mergePanelOpen &&
+                          event.dataTransfer.files?.length
+                        ) {
+                          (event.preventDefault(), event.stopPropagation());
+                          Jx(
+                            Q ? "merge" : "combine",
+                            event.dataTransfer.files,
+                          );
+                          return;
+                        }
                         transferPagesBetweenPanels(
                           event,
                           documentItem.id,
                           pageIndex,
-                        ),
+                        );
+                      },
                       onClick: (event) =>
                         selectOrganizerPage(
                           event,
@@ -16240,7 +16286,10 @@ function cs() {
                           setTimeout(() => {
                             (Ta(page.id), ka(new Set([page.id])));
                           }, 0);
-                        } else Ta(page.id);
+                        } else {
+                          (Ta(page.id), ka(new Set([page.id])));
+                          if (pagePanelOpen) setPagePanelOpen(!1);
+                        }
                       },
                       children: [
                         (0, d.jsx)("div", {
@@ -16267,12 +16316,18 @@ function cs() {
                 (0, d.jsx)("div", {
                   className: "dual-drop-end",
                   onDragOver: (event) => event.preventDefault(),
-                  onDrop: (event) =>
+                  onDrop: (event) => {
+                    if (mergePanelOpen && event.dataTransfer.files?.length) {
+                      (event.preventDefault(), event.stopPropagation());
+                      Jx(Q ? "merge" : "combine", event.dataTransfer.files);
+                      return;
+                    }
                     transferPagesBetweenPanels(
                       event,
                       documentItem.id,
                       documentItem.pages.length,
-                    ),
+                    );
+                  },
                   children: "Suelta aquí para añadir al final",
                 }),
               ],
@@ -16281,7 +16336,71 @@ function cs() {
         },
         documentItem.id,
       );
-    };
+    },
+    renderMergeWorkspace = () =>
+      (0, d.jsxs)("div", {
+        className: "merge-workspace",
+        children: [
+          (0, d.jsxs)("section", {
+            className: "merge-file-dropzone",
+            onDragOver: (event) => {
+              (event.preventDefault(), event.stopPropagation());
+              event.dataTransfer.dropEffect = "copy";
+            },
+            onDrop: (event) => {
+              (event.preventDefault(), event.stopPropagation());
+              let files = Array.from(event.dataTransfer.files || []);
+              files.length && Jx(Q ? "merge" : "combine", files);
+            },
+            children: [
+              (0, d.jsx)("h2", { children: "Unir archivos PDF" }),
+              (0, d.jsx)("p", {
+                children:
+                  "Arrastra aquí los documentos. Sus páginas se incorporarán al PDF final en el mismo orden.",
+              }),
+              (0, d.jsxs)("button", {
+                type: "button",
+                onClick: () => Jx(Q ? "merge" : "combine"),
+                children: [
+                  (0, d.jsx)(df, { size: 20 }),
+                  "Seleccionar archivos PDF",
+                ],
+              }),
+              (0, d.jsx)("small", {
+                children: "También puedes arrastrar y soltar varios archivos a la vez",
+              }),
+            ],
+          }),
+          w.length && pn
+            ? (0, d.jsxs)("section", {
+                className: "merge-result-panel",
+                children: [
+                  (0, d.jsxs)("div", {
+                    className: "merge-result-help",
+                    children: [
+                      (0, d.jsx)("strong", { children: "PDF final" }),
+                      (0, d.jsx)("span", {
+                        children:
+                          "Arrastra las páginas para cambiar el orden antes de guardar.",
+                      }),
+                      (0, d.jsx)("b", {
+                        children: `${w.length} páginas`,
+                      }),
+                    ],
+                  }),
+                  renderOrganizerPanel(
+                    { ...pn, pages: w, marks: T },
+                    "Documento combinado",
+                  ),
+                ],
+              })
+            : (0, d.jsx)("div", {
+                className: "merge-empty-result",
+                children:
+                  "El PDF resultante aparecerá aquí con todas sus páginas.",
+              }),
+        ],
+      });
   return (0, d.jsxs)("main", {
     className: "app",
     onClick: () => ea && Xa(null),
@@ -16307,6 +16426,15 @@ function cs() {
         accept:
           ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.dwg,.dxf,.jpg,.jpeg,.png,.bmp,.webp,.tif,.tiff",
         onChange: (n) => ks(n, "merge"),
+      }),
+      (0, d.jsx)("input", {
+        hidden: !0,
+        ref: mergeBuilderInput,
+        type: "file",
+        multiple: !0,
+        accept:
+          ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.dwg,.dxf,.jpg,.jpeg,.png,.bmp,.webp,.tif,.tiff",
+        onChange: (n) => ks(n, Q ? "merge" : "combine"),
       }),
       (0, d.jsx)("input", {
         hidden: !0,
@@ -16434,9 +16562,27 @@ function cs() {
             children: [
               (0, d.jsx)("button", {
                 type: "button",
-                className: dualPanelOpen ? "" : "active",
-                onClick: () => setDualPanelOpen(!1),
-                children: "1 panel",
+                className:
+                  !dualPanelOpen && !pagePanelOpen && !mergePanelOpen
+                    ? "active"
+                    : "",
+                onClick: () => {
+                  (setDualPanelOpen(!1),
+                    setPagePanelOpen(!1),
+                    setMergePanelOpen(!1));
+                },
+                children: "Documento",
+              }),
+              (0, d.jsx)("button", {
+                type: "button",
+                className: pagePanelOpen ? "active" : "",
+                disabled: !w.length,
+                onClick: () => {
+                  (setDualPanelOpen(!1),
+                    setMergePanelOpen(!1),
+                    setPagePanelOpen(!0));
+                },
+                children: "Páginas",
               }),
               (0, d.jsx)("button", {
                 type: "button",
@@ -16446,21 +16592,26 @@ function cs() {
                     F("Abre un segundo PDF para usar dos paneles");
                     return;
                   }
-                  setDualPanelOpen(!0);
+                  (setPagePanelOpen(!1),
+                    setMergePanelOpen(!1),
+                    setDualPanelOpen(!0));
                 },
-                children: "2 paneles",
+                children: "2 PDF",
               }),
             ],
           }),
           (0, d.jsxs)("button", {
             type: "button",
-            className: "merge-pdf-button",
-            onClick: () => Jx("merge"),
-            disabled: !w.length,
-            title: "Añadir uno o varios PDF al documento actual",
+            className: `merge-pdf-button ${mergePanelOpen ? "active" : ""}`,
+            onClick: () => {
+              (setDualPanelOpen(!1),
+                setPagePanelOpen(!1),
+                setMergePanelOpen(!0));
+            },
+            title: "Arrastrar y ordenar archivos para crear un único PDF",
             children: [
               (0, d.jsx)(df, { size: 15 }),
-              (0, d.jsx)("span", { children: "Fusionar PDF" }),
+              (0, d.jsx)("span", { children: "Unir archivos" }),
             ],
           }),
           (0, d.jsxs)("button", {
@@ -17485,13 +17636,49 @@ function cs() {
               }),
               (0, d.jsx)("div", {
                 ref: u,
-                className: `stage ${W === "hand" ? "hand" : ""} ${Wh ? "panning" : ""} ${Cf <= 35 ? "overview-stage" : ""} ${dualPanelOpen ? "dual-stage" : ""}`,
-                onPointerDown: dualPanelOpen || Cf <= 35 ? void 0 : sx,
-                onPointerMove: dualPanelOpen || Cf <= 35 ? void 0 : cx,
-                onPointerUp: dualPanelOpen || Cf <= 35 ? void 0 : Rs,
-                onPointerCancel: dualPanelOpen || Cf <= 35 ? void 0 : Rs,
-                children: w.length
-                  ? dualPanelOpen && O.length > 1 && pn && mn
+                className: `stage ${W === "hand" ? "hand" : ""} ${Wh ? "panning" : ""} ${Cf <= 35 ? "overview-stage" : ""} ${dualPanelOpen ? "dual-stage" : ""} ${pagePanelOpen ? "page-panel-stage" : ""} ${mergePanelOpen ? "merge-panel-stage" : ""}`,
+                onPointerDown:
+                  dualPanelOpen || pagePanelOpen || mergePanelOpen || Cf <= 35
+                    ? void 0
+                    : sx,
+                onPointerMove:
+                  dualPanelOpen || pagePanelOpen || mergePanelOpen || Cf <= 35
+                    ? void 0
+                    : cx,
+                onPointerUp:
+                  dualPanelOpen || pagePanelOpen || mergePanelOpen || Cf <= 35
+                    ? void 0
+                    : Rs,
+                onPointerCancel:
+                  dualPanelOpen || pagePanelOpen || mergePanelOpen || Cf <= 35
+                    ? void 0
+                    : Rs,
+                children: mergePanelOpen
+                  ? renderMergeWorkspace()
+                  : w.length
+                    ? pagePanelOpen && pn
+                      ? (0, d.jsxs)("div", {
+                          className: "single-page-organizer",
+                          children: [
+                            (0, d.jsxs)("div", {
+                              className: "dual-organizer-help",
+                              children: [
+                                (0, d.jsx)("strong", {
+                                  children: "Panel de páginas",
+                                }),
+                                (0, d.jsx)("span", {
+                                  children:
+                                    "Todas las páginas en cuadrícula. Arrastra para cambiar el orden y haz doble clic para abrir una página.",
+                                }),
+                              ],
+                            }),
+                            renderOrganizerPanel(
+                              { ...pn, pages: w, marks: T },
+                              "PDF actual",
+                            ),
+                          ],
+                        })
+                    : dualPanelOpen && O.length > 1 && pn && mn
                     ? (0, d.jsxs)("div", {
                         className: "dual-organizer",
                         children: [
@@ -17611,7 +17798,7 @@ onContextMenu:gx,onPointerDown:ix,
                                 n.type === "text" &&
                                 n.replaceOriginal &&
                                 n.sourceRect &&
-                                (n.textDirty || n.styleDirty),
+                                (n.textDirty || n.styleDirty || zl === n.id),
                             ).map((n) =>
                               (0, d.jsx)(
                                 "span",

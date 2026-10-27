@@ -50,7 +50,7 @@ jobs:
           $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
           $graphics.Clear([System.Drawing.Color]::White)
           $font = New-Object System.Drawing.Font("Arial", 64)
-          $graphics.DrawString("PRUEBA OCR PDF IGNOVA 1911", $font, [System.Drawing.Brushes]::Black, 40, 90)
+          $graphics.DrawString("PRUEBA OCR PDF IGNOVA 1912", $font, [System.Drawing.Brushes]::Black, 40, 90)
           $imagePath = Join-Path $pwd "ocr-test.png"
           $bitmap.Save($imagePath, [System.Drawing.Imaging.ImageFormat]::Png)
           $graphics.Dispose()
@@ -95,7 +95,7 @@ jobs:
       - name: Verify installation and uninstallation
         shell: pwsh
         run: |
-          $setup = Resolve-Path "source/release-installer/PDF-Ignova-Pro-1.9.11-Setup-Windows-x64-unsigned.exe"
+          $setup = Resolve-Path "source/release-installer/PDF-Ignova-Pro-1.9.12-Setup-Windows-x64-unsigned.exe"
           $installDir = Join-Path $env:RUNNER_TEMP "PDF-Ignova-Pro-test-install"
           $process = Start-Process -FilePath $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/DIR=$installDir" -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw "Installer returned $($process.ExitCode)." }
@@ -112,13 +112,13 @@ jobs:
         run: |
           $source = "source"
           $folder = Get-ChildItem "$source/release" -Directory | Select-Object -First 1
-          $portable = "PDF-Ignova-Pro-1.9.11-Windows-x64-portable-unsigned.zip"
-          $setup = "PDF-Ignova-Pro-1.9.11-Setup-Windows-x64-unsigned.exe"
-          $sourceZip = "PDF_Ignova_Pro_1.9.11_Codigo_Fuente_GPLv3.zip"
+          $portable = "PDF-Ignova-Pro-1.9.12-Windows-x64-portable-unsigned.zip"
+          $setup = "PDF-Ignova-Pro-1.9.12-Setup-Windows-x64-unsigned.exe"
+          $sourceZip = "PDF_Ignova_Pro_1.9.12_Codigo_Fuente_GPLv3.zip"
           Compress-Archive -Path (Join-Path $folder.FullName '*') -DestinationPath $portable -Force
           Copy-Item "$source/release-installer/$setup" $setup -Force
 
-          $sourceRoot = Join-Path $env:RUNNER_TEMP "PDF_Ignova_Pro_1.9.11_Source"
+          $sourceRoot = Join-Path $env:RUNNER_TEMP "PDF_Ignova_Pro_1.9.12_Source"
           New-Item -ItemType Directory -Path $sourceRoot -Force | Out-Null
           $trackedFiles = git ls-files "source/**" ".github/workflows/**"
           foreach ($trackedFile in $trackedFiles) {
@@ -131,7 +131,7 @@ jobs:
             New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
             Copy-Item $trackedFile $destination -Force
           }
-          tar -a -c -f $sourceZip -C $env:RUNNER_TEMP "PDF_Ignova_Pro_1.9.11_Source"
+          tar -a -c -f $sourceZip -C $env:RUNNER_TEMP "PDF_Ignova_Pro_1.9.12_Source"
 
           foreach ($asset in @($setup, $portable, $sourceZip)) {
             $digest = (Get-FileHash -Algorithm SHA256 $asset).Hash.ToLowerInvariant()
@@ -141,48 +141,47 @@ jobs:
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: pdf-ignova-pro-1.9.11-windows-x64-unsigned
+          name: pdf-ignova-pro-1.9.12-windows-x64-unsigned
           path: |
-            PDF-Ignova-Pro-1.9.11-Setup-Windows-x64-unsigned.exe
-            PDF-Ignova-Pro-1.9.11-Setup-Windows-x64-unsigned.exe.sha256.txt
-            PDF-Ignova-Pro-1.9.11-Windows-x64-portable-unsigned.zip
-            PDF-Ignova-Pro-1.9.11-Windows-x64-portable-unsigned.zip.sha256.txt
-            PDF_Ignova_Pro_1.9.11_Codigo_Fuente_GPLv3.zip
-            PDF_Ignova_Pro_1.9.11_Codigo_Fuente_GPLv3.zip.sha256.txt
+            PDF-Ignova-Pro-1.9.12-Setup-Windows-x64-unsigned.exe
+            PDF-Ignova-Pro-1.9.12-Setup-Windows-x64-unsigned.exe.sha256.txt
+            PDF-Ignova-Pro-1.9.12-Windows-x64-portable-unsigned.zip
+            PDF-Ignova-Pro-1.9.12-Windows-x64-portable-unsigned.zip.sha256.txt
+            PDF_Ignova_Pro_1.9.12_Codigo_Fuente_GPLv3.zip
+            PDF_Ignova_Pro_1.9.12_Codigo_Fuente_GPLv3.zip.sha256.txt
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub release 1.9.11
+      - name: Publish GitHub release 1.9.12
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v1.9.11"
-          $title = "PDF Ignova Pro 1.9.11"
+          $tag = "v1.9.12"
+          $title = "PDF Ignova Pro 1.9.12"
           $assets = @(
-            "PDF-Ignova-Pro-1.9.11-Setup-Windows-x64-unsigned.exe",
-            "PDF-Ignova-Pro-1.9.11-Setup-Windows-x64-unsigned.exe.sha256.txt",
-            "PDF-Ignova-Pro-1.9.11-Windows-x64-portable-unsigned.zip",
-            "PDF-Ignova-Pro-1.9.11-Windows-x64-portable-unsigned.zip.sha256.txt",
-            "PDF_Ignova_Pro_1.9.11_Codigo_Fuente_GPLv3.zip",
-            "PDF_Ignova_Pro_1.9.11_Codigo_Fuente_GPLv3.zip.sha256.txt"
+            "PDF-Ignova-Pro-1.9.12-Setup-Windows-x64-unsigned.exe",
+            "PDF-Ignova-Pro-1.9.12-Setup-Windows-x64-unsigned.exe.sha256.txt",
+            "PDF-Ignova-Pro-1.9.12-Windows-x64-portable-unsigned.zip",
+            "PDF-Ignova-Pro-1.9.12-Windows-x64-portable-unsigned.zip.sha256.txt",
+            "PDF_Ignova_Pro_1.9.12_Codigo_Fuente_GPLv3.zip",
+            "PDF_Ignova_Pro_1.9.12_Codigo_Fuente_GPLv3.zip.sha256.txt"
           )
           $notes = @"
-          PDF Ignova Pro 1.9.11 para Windows 10/11 x64.
+          PDF Ignova Pro 1.9.12 para Windows 10/11 x64.
 
           Descarga recomendada: el archivo Setup.exe. Instala accesos directos y añade la desinstalación normal desde Configuración > Aplicaciones. El ZIP portátil se mantiene como alternativa.
 
           Novedades y correcciones:
-          - Nuevo botón Fusionar PDF en la barra superior para añadir varios documentos en orden.
-          - Edición de texto con mayor fidelidad de fuente, tamaño, color, giro y fondo originales.
-          - Selección estable de líneas y párrafos completos para copiar o editar.
-          - Creación de texto multilínea más fluida y sin desplazamientos inesperados.
-          - Selección múltiple independiente en los dos paneles y arrastre de páginas en grupo.
-          - Zoom con Ctrl y rueda anclado bajo el cursor; desplazamiento normal con la rueda sola.
+          - «Seleccionar texto» sustituye visualmente el texto original mientras se edita, sin mostrar una copia superpuesta.
+          - Nuevo panel «Páginas» con todas las páginas en una cuadrícula de miniaturas claramente identificables.
+          - Reordenación directa de páginas mediante arrastrar y soltar; doble clic para abrir una página.
+          - Nuevo panel «Unir archivos» para seleccionar o soltar varios PDF y formar un único documento.
+          - Las páginas del documento combinado pueden revisarse y reordenarse antes de guardarlo.
           - OCR verificado de forma funcional con Windows PowerShell 5.1.
           - Instalación y desinstalación verificadas automáticamente.
-          - Conserva el guardado seguro, OCR, siete idiomas e impresión A1/A2 de versiones anteriores.
+          - Conserva el organizador de dos paneles, guardado seguro, OCR, siete idiomas e impresión A1/A2.
 
           Aplicación sin firma digital. Windows puede mostrar una advertencia de SmartScreen.
           "@

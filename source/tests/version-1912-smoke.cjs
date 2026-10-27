@@ -13,7 +13,7 @@ const css = read("app/editor-assets/editor-entry.css");
 const i18nExtra = read("app/editor-assets/i18n-extra.js");
 const installer = read("installer/PDF-Ignova-Pro.iss");
 
-assert.equal(packageJson.version, "1.9.11");
+assert.equal(packageJson.version, "1.9.12");
 
 assert.match(editorHtml, /text-edit-utils\.js/);
 assert.match(editor, /PDF_IGNOVA_TEXT_EDIT/);
@@ -24,7 +24,7 @@ assert.match(editor, /fontSizeRatio/);
 assert.match(editor, /fontFamily: n\.cssFont \|\| n\.font/);
 assert.match(css, /white-space:\s*pre-wrap/);
 
-assert.match(editor, /className: "merge-pdf-button"/);
+assert.match(editor, /merge-pdf-button/);
 assert.match(editor, /onClick: \(\) => Jx\("merge"\)/);
 assert.match(editor, /onChange: \(n\) => ks\(n, "merge"\)/);
 assert.match(editor, /p\\xE1gina\$\{A\.length === 1 \? "" : "s"\} a\\xF1adidas/);
@@ -37,8 +37,13 @@ assert.match(editor, /event\.ctrlKey \|\| event\.metaKey/);
 assert.match(editor, /zoomWheelAnchor/);
 assert.match(editor, /n\.ctrlKey \|\| n\.metaKey/);
 
-assert.match(installer, /PDF-Ignova-Pro-1\.9\.11-Setup-Windows-x64-unsigned/);
-assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.11.txt")));
-assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.11_MAC.txt")));
+assert.match(editor, /pagePanelOpen/);
+assert.match(editor, /mergePanelOpen/);
+assert.match(editor, /n === "combine"/);
+assert.match(editor, /combinedDocument/);
 
-console.log("version 1.9.11 smoke test passed");
+assert.match(installer, /PDF-Ignova-Pro-1\.9\.12-Setup-Windows-x64-unsigned/);
+assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.12.txt")));
+assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.12_MAC.txt")));
+
+console.log("version 1.9.12 smoke test passed");

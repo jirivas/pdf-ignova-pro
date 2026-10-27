@@ -1,0 +1,16 @@
+PDF IGNOVA PRO 1.9.12 — CAMBIOS PARA WINDOWS
+
+- «Seleccionar texto» sustituye visualmente el texto original desde que comienza
+  la edición. Ya no aparece una segunda imagen o copia superpuesta del texto.
+- Nuevo panel «Páginas» en la parte superior con todas las páginas en una
+  cuadrícula de miniaturas de tamaño suficiente para identificarlas.
+- Las páginas pueden reordenarse mediante arrastrar y soltar y abrirse con doble
+  clic desde la cuadrícula.
+- Nuevo panel «Unir archivos» para seleccionar o soltar varios PDF y convertirlos
+  en un único documento.
+- El documento combinado muestra todas sus páginas y permite reordenarlas antes
+  de guardarlo.
+- Se mantienen el organizador de dos paneles, el guardado seguro, OCR local,
+  siete idiomas, zoom hasta 500 % e impresión A4, A3, A2 y A1.
+
+Distribución pública sin firma digital. Windows puede mostrar SmartScreen.
