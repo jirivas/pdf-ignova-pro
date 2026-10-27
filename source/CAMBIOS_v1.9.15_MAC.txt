@@ -1,0 +1,12 @@
+PDF IGNOVA PRO 1.9.15 — CAMBIOS PARA macOS
+
+- La barra superior separa «Seleccionar», «Modificar texto» y «Crear texto».
+- «Seleccionar» copia texto o marca una zona sin alterar el documento.
+- «Modificar texto» sustituye el original en su posición, desde Propiedades y
+  sin cuadro superpuesto, sombras, duplicaciones, marco ni tiradores.
+- «Crear texto» abre un diálogo y conserva la posición elegida en la página.
+- Se mantienen el panel Páginas, la unión de archivos, el organizador de dos
+  paneles, OCR con Vision, siete idiomas e impresión A4, A3, A2 y A1.
+
+DMG universal para Apple Silicon e Intel, con firma ad hoc y sin notarización.
+macOS puede pedir confirmación al abrir la aplicación por primera vez.

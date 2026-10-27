@@ -217,6 +217,13 @@
   box-shadow: none;
 }
 
+.mark.text.pdf-text-edit .pdf-text-replacement {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+}
+
 .pdf-original-cover {
   position: absolute;
   display: block;
@@ -242,6 +249,27 @@
 .ocr-region-selection.busy {
   border-style: dashed;
   animation: ocr-region-pulse 0.85s ease-in-out infinite alternate;
+}
+
+.screen-region-selection {
+  position: absolute;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  min-width: 2px;
+  min-height: 2px;
+  border: 2px solid #1268e8;
+  background: rgba(18, 104, 232, 0.1);
+  color: #075acb;
+  font: 700 11px Arial, sans-serif;
+  pointer-events: none;
+}
+
+.existing-text-help {
+  display: block;
+  margin: -2px 0 8px;
+  color: #526477;
+  line-height: 1.35;
 }
 
 @keyframes ocr-region-pulse {

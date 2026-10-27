@@ -1,5 +1,5 @@
 #define MyAppName "PDF Ignova Pro"
-#define MyAppVersion "1.9.14"
+#define MyAppVersion "1.9.15"
 #define MyAppPublisher "IGNOVA Ingeniería"
 #define MyAppExeName "PDF Ignova Pro.exe"
 
@@ -19,7 +19,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\release-installer
-OutputBaseFilename=PDF-Ignova-Pro-1.9.14-Setup-Windows-x64-unsigned
+OutputBaseFilename=PDF-Ignova-Pro-1.9.15-Setup-Windows-x64-unsigned
 SetupIconFile=..\app\icon.ico
 Uninstallable=yes
 UninstallDisplayName={#MyAppName} {#MyAppVersion}
@@ -33,8 +33,8 @@ RestartApplications=no
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=Instalador de {#MyAppName}
 VersionInfoProductName={#MyAppName}
-VersionInfoProductVersion=1.9.14.0
-VersionInfoVersion=1.9.14.0
+VersionInfoProductVersion=1.9.15.0
+VersionInfoVersion=1.9.15.0
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"

@@ -1,0 +1,15 @@
+PDF IGNOVA PRO 1.9.15 — CAMBIOS PARA WINDOWS
+
+- Se separan definitivamente tres herramientas distintas en la barra superior:
+  «Seleccionar», «Modificar texto» y «Crear texto».
+- «Seleccionar» queda situado antes de la mano. Sirve para copiar texto nativo o
+  marcar visualmente una zona de la página y nunca modifica el PDF.
+- «Modificar texto» sustituye el texto existente en su posición original. La
+  edición se realiza en Propiedades, sin crear un cuadro sobre la página, sin
+  tiradores y sin dejar visible una sombra o duplicación del texto original.
+- «Crear texto» abre un diálogo independiente y conserva el punto elegido como
+  posición final, también cerca de los bordes de la página.
+- Se mantienen el panel Páginas, la unión de archivos, el organizador de dos
+  paneles, OCR local, siete idiomas e impresión A4, A3, A2 y A1.
+
+Distribución pública sin firma digital. Windows puede mostrar SmartScreen.

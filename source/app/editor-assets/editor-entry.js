@@ -13130,6 +13130,7 @@ function PdfEditableTextLayer({
   page: a,
   width: t,
   enabled: l,
+  editingText,
   onPick: u,
   onLink,
   onSelection,
@@ -13364,9 +13365,11 @@ function PdfEditableTextLayer({
               {
                 className: `pdf-text-hit ${i.link ? "pdf-text-link" : ""} ${selectedKeys.has(i.key) ? "pdf-text-selected" : ""}`,
                 "data-pdf-text-key": i.key,
-                title: i.link
-                  ? `Enlace: ${i.link.label}`
-                  : `Arrastra para seleccionar. Clic para editar: ${i.text}`,
+                title: editingText
+                  ? `Modificar texto: ${i.text}`
+                  : i.link
+                    ? `Enlace: ${i.link.label}`
+                    : `Seleccionar o copiar: ${i.text}`,
                 style: {
                   left: i.left,
                   top: i.top,
@@ -13379,7 +13382,7 @@ function PdfEditableTextLayer({
                   fontStyle: i.italic ? "italic" : "normal",
                 },
                 onPointerDown: (event) => {
-                  if (event.button !== 0 || i.link) return;
+                  if (editingText || event.button !== 0 || i.link) return;
                   dragSelection.current = {
                     pointerId: event.pointerId,
                     anchorKey: i.key,
@@ -13390,14 +13393,18 @@ function PdfEditableTextLayer({
                   };
                   event.currentTarget.setPointerCapture?.(event.pointerId);
                 },
-                onPointerMove: handleSelectionMove,
-                onPointerUp: finishControlledSelection,
-                onPointerCancel: finishControlledSelection,
+                onPointerMove: editingText ? void 0 : handleSelectionMove,
+                onPointerUp: editingText ? void 0 : finishControlledSelection,
+                onPointerCancel: editingText ? void 0 : finishControlledSelection,
                 onClick: (r) => {
                   if (suppressClick.current) {
                     (r.preventDefault(),
                       r.stopPropagation(),
                       (suppressClick.current = !1));
+                    return;
+                  }
+                  if (editingText) {
+                    (r.preventDefault(), r.stopPropagation(), u?.(i));
                     return;
                   }
                   let selectedText =
@@ -13408,11 +13415,12 @@ function PdfEditableTextLayer({
                     r.stopPropagation();
                     return;
                   }
-                  (r.preventDefault(),
-                    r.stopPropagation(),
-                    i.link
-                      ? onLink?.({ ...i.link, textItem: i })
-                      : u?.(i));
+                  (r.preventDefault(), r.stopPropagation());
+                  if (i.link) {
+                    onLink?.({ ...i.link, textItem: i });
+                    return;
+                  }
+                  (setSelectedKeys(new Set([i.key])), onSelection?.(i.text));
                 },
                 children: `${i.text}${i.hasEOL ? "\n" : /\s$/.test(i.text) ? "" : " "}`,
               },
@@ -13497,6 +13505,7 @@ function cs() {
     p = (0, I.useRef)(null),
     c = (0, I.useRef)(null),
     ocrDrag = (0, I.useRef)(null),
+    screenSelectionDrag = (0, I.useRef)(null),
     zoomWheelAnchor = (0, I.useRef)(null),
     dualSelectionAnchors = (0, I.useRef)({}),
     searchRequest = (0, I.useRef)(0),
@@ -13545,6 +13554,7 @@ function cs() {
     [highlightOpacity, setHighlightOpacity] = (0, I.useState)(0.38),
     [redactColor, setRedactColor] = (0, I.useState)("#ffffff"),
     [ocrSelection, setOcrSelection] = (0, I.useState)(null),
+    [screenSelection, setScreenSelection] = (0, I.useState)(null),
     [ocrRegionResult, setOcrRegionResult] = (0, I.useState)(""),
     [ocrRegionOpen, setOcrRegionOpen] = (0, I.useState)(!1),
     [ocrRegionBusy, setOcrRegionBusy] = (0, I.useState)(!1),
@@ -13683,7 +13693,16 @@ function cs() {
       [F, readNativePdfSelection],
     ),
     activateNativeTextSelection = (0, I.useCallback)(() => {
-      (Me("select"), De(null), F("Arrastra sobre el texto para seleccionarlo"));
+      (Me("select"),
+        De(null),
+        setScreenSelection(null),
+        F("Arrastra sobre texto o marca una zona de la página"));
+    }, [F]),
+    activatePdfTextModification = (0, I.useCallback)(() => {
+      (Me("modify-text"),
+        De(null),
+        setNativeSelectionText(""),
+        F("Haz clic en el texto del PDF que quieres modificar"));
     }, [F]),
     El = (0, I.useCallback)((n) => {
       let s = Wt(n.pages),
@@ -13804,17 +13823,18 @@ function cs() {
     ),
     wx = (0, I.useCallback)(
       (n) => {
-        if (!$ || W !== "select") return;
+        if (!$ || W !== "modify-text") return;
         let s = `${$.docId}:${$.index}:${n.key}`,
           L = f.current.find(
             (k) => k.pageId === $.id && k.sourceTextKey === s,
           );
         if (L) {
           (De(L.id),
+            kl(!0),
             setTimeout(
               () =>
                 document
-                  .querySelector(`[data-mark-id="${L.id}"] .text-editor`)
+                  .querySelector(".right .editor-properties textarea")
                   ?.focus(),
               0,
             ));
@@ -13873,11 +13893,12 @@ function cs() {
           };
         (aa((_) => [..._, k]),
           De(k.id),
-          F("Edita directamente el texto seleccionado"),
+          kl(!0),
+          F("Modifica el texto en el panel derecho; no se crea ningún cuadro"),
           setTimeout(
             () =>
               document
-                .querySelector(`[data-mark-id="${k.id}"] .text-editor`)
+                .querySelector(".right .editor-properties textarea")
                 ?.focus(),
             0,
           ));
@@ -14579,22 +14600,37 @@ function cs() {
         F("Escribe el texto que quieres crear");
         return;
       }
-      let lineCount = Math.max(1, text.split("\n").length),
+      let lines = text.split("\n"),
+        lineCount = Math.max(1, lines.length),
+        longestLine = Math.max(1, ...lines.map((line) => line.length)),
+        pageWidthPoints = Math.max(newTextDialog.pageWidthPoints || 595.28, 1),
         pageHeightPoints = Math.max(newTextDialog.pageHeightPoints || 841.89, 1),
+        x = Ee(newTextDialog.x, 0, 0.995),
+        y = Ee(newTextDialog.y, 0, 0.995),
+        estimatedWidth = Ee(
+          (longestLine * 12 * 0.58 + 6) / pageWidthPoints,
+          0.04,
+          Math.max(0.04, 1 - x),
+        ),
+        estimatedHeight = Ee(
+          (lineCount * 12 * 1.15 + 4) / pageHeightPoints,
+          0.025,
+          Math.max(0.025, 1 - y),
+        ),
         mark = {
           id: Da(),
           pageId: newTextDialog.pageId,
           type: "text",
           text,
-          x: newTextDialog.x,
-          y: newTextDialog.y,
-          w: 0.28,
-          h: Ee((lineCount * 12 * 1.4) / pageHeightPoints, 0.025, 0.22),
+          x,
+          y,
+          w: estimatedWidth,
+          h: estimatedHeight,
           color: "#111111",
           backgroundColor: "transparent",
           size: 12,
-          fontSizeRatio: 12 / Math.max(newTextDialog.pageWidthPoints || 595.28, 1),
-          pageWidthPoints: newTextDialog.pageWidthPoints || 595.28,
+          fontSizeRatio: 12 / pageWidthPoints,
+          pageWidthPoints,
           font: "Arial",
           cssFont: "Arial",
           bold: !1,
@@ -14602,15 +14638,13 @@ function cs() {
           underline: !1,
           crop: Pu(),
         };
-      ((mark.x = Ee(mark.x, 0, 1 - mark.w)),
-        (mark.y = Ee(mark.y, 0, 1 - mark.h)),
-        aa((marks) => [...marks, mark]),
+      (aa((marks) => [...marks, mark]),
         De(mark.id),
         kl(!0),
         setNewTextDialog(null),
         setNewTextDraft(""),
         Me("select"),
-        F("Texto nuevo añadido"));
+        F("Texto creado en la posición elegida"));
     },
     nx = (0, I.useCallback)(
       async (n) => {
@@ -14625,6 +14659,7 @@ function cs() {
         }
         if (
           W === "select" ||
+          W === "modify-text" ||
           W === "hand" ||
           W === "draw" ||
           W === "ocr-region"
@@ -14686,6 +14721,23 @@ function cs() {
       [$, gn, aa, xn, W, highlightColor, highlightOpacity, redactColor, F],
     ),
     ix = (n) => {
+      if (
+        W === "select" &&
+        n.button === 0 &&
+        $ &&
+        !n.target.closest?.(".pdf-text-hit, .pdf-native-link-hit")
+      ) {
+        let s = ju(n.currentTarget, n.clientX, n.clientY);
+        (n.preventDefault(),
+          n.stopPropagation(),
+          (screenSelectionDrag.current = {
+            pointerId: n.pointerId,
+            start: s,
+          }),
+          setScreenSelection({ x: s.x, y: s.y, w: 0, h: 0 }),
+          n.currentTarget.setPointerCapture(n.pointerId));
+        return;
+      }
       if (W === "ocr-region" && n.button === 0 && $) {
         let s = ju(n.currentTarget, n.clientX, n.clientY);
         (n.preventDefault(),
@@ -14721,6 +14773,19 @@ function cs() {
         n.currentTarget.setPointerCapture(n.pointerId));
     },
     rx = (n) => {
+      let screenPointer = screenSelectionDrag.current;
+      if (screenPointer && screenPointer.pointerId === n.pointerId) {
+        let current = ju(n.currentTarget, n.clientX, n.clientY),
+          start = screenPointer.start;
+        (n.preventDefault(),
+          setScreenSelection({
+            x: Math.min(start.x, current.x),
+            y: Math.min(start.y, current.y),
+            w: Math.abs(current.x - start.x),
+            h: Math.abs(current.y - start.y),
+          }));
+        return;
+      }
       let ocrPointer = ocrDrag.current;
       if (ocrPointer && ocrPointer.pointerId === n.pointerId) {
         let current = ju(n.currentTarget, n.clientX, n.clientY),
@@ -14752,6 +14817,26 @@ function cs() {
       );
     },
     Bs = (n) => {
+      let screenPointer = screenSelectionDrag.current;
+      if (screenPointer && screenPointer.pointerId === n.pointerId) {
+        let current = ju(n.currentTarget, n.clientX, n.clientY),
+          start = screenPointer.start,
+          selection = {
+            x: Math.min(start.x, current.x),
+            y: Math.min(start.y, current.y),
+            w: Math.abs(current.x - start.x),
+            h: Math.abs(current.y - start.y),
+          };
+        (n.currentTarget.hasPointerCapture(n.pointerId) &&
+          n.currentTarget.releasePointerCapture(n.pointerId),
+          (screenSelectionDrag.current = null));
+        if (selection.w < 0.005 || selection.h < 0.005) {
+          setScreenSelection(null);
+        } else {
+          (setScreenSelection(selection), F("Zona de la página seleccionada"));
+        }
+        return;
+      }
       let ocrPointer = ocrDrag.current;
       if (ocrPointer && ocrPointer.pointerId === n.pointerId) {
         let current = ju(n.currentTarget, n.clientX, n.clientY),
@@ -16008,9 +16093,20 @@ function cs() {
           height: `${n.h * 100}%`,
           color: n.color,
           background:
-            n.type === "text" || n.type === "image" || n.type === "watermark"
-              ? "transparent"
-              : n.color,
+            n.type === "text"
+              ? n.replaceOriginal &&
+                (n.textDirty || n.styleDirty || zl === n.id)
+                ? n.backgroundColor || "#ffffff"
+                : "transparent"
+              : n.type === "image" || n.type === "watermark"
+                ? "transparent"
+                : n.color,
+          boxShadow:
+            n.type === "text" &&
+            n.replaceOriginal &&
+            (n.textDirty || n.styleDirty || zl === n.id)
+              ? `0 0 0 2px ${n.backgroundColor || "#ffffff"}`
+              : void 0,
           fontSize: displayFontSize,
           fontFamily: n.cssFont || n.font,
           fontWeight: n.bold ? 700 : 400,
@@ -16047,8 +16143,8 @@ function cs() {
                     children: "\u22EE\u22EE",
                   }),
                 (0, d.jsx)("span", {
-                  className: "text-editor",
-                  contentEditable: !0,
+                  className: `text-editor ${n.replaceOriginal ? "pdf-text-replacement" : ""}`,
+                  contentEditable: !n.replaceOriginal,
                   suppressContentEditableWarning: !0,
                   spellCheck: !1,
                   "data-placeholder": n.text ? void 0 : "Escribe aquí",
@@ -16062,23 +16158,23 @@ function cs() {
                   onPointerDown: (y) => {
                     W !== "draw" && (y.stopPropagation(), De(n.id));
                   },
-                  onFocus: Te,
-                  onInput: (y) => {
+                  onFocus: n.replaceOriginal ? void 0 : Te,
+                  onInput: n.replaceOriginal ? void 0 : (y) => {
                     ((y.currentTarget.dataset.pdfTextUserEdited = "1"),
                       y.currentTarget
                         .closest(".mark")
                         ?.classList.add("pdf-text-live-edit"));
                   },
-                  onPaste: (y) => {
+                  onPaste: n.replaceOriginal ? void 0 : (y) => {
                     let A = y.clipboardData?.getData("text/plain");
                     if (typeof A !== "string") return;
                     (y.preventDefault(),
                       document.execCommand("insertText", !1, A));
                   },
-                  onKeyDown: (y) => {
+                  onKeyDown: n.replaceOriginal ? void 0 : (y) => {
                     y.key === "Escape" && y.currentTarget.blur();
                   },
-                  onBlur: (y) => {
+                  onBlur: n.replaceOriginal ? void 0 : (y) => {
                     let A = (y.currentTarget.innerText || "").replace(/\r/g, ""),
                       k = y.currentTarget.dataset.pdfTextUserEdited === "1",
                       lineCount = Math.max(1, A.split("\n").length),
@@ -16848,7 +16944,7 @@ function cs() {
                 children: [
                   (0, d.jsxs)("button", {
                     onClick: () => Me("text"),
-                    children: [(0, d.jsx)(Al, {}), "A\xF1adir y editar texto"],
+                    children: [(0, d.jsx)(Al, {}), "Crear texto"],
                   }),
                   (0, d.jsxs)("button", {
                     onClick: () => Me("draw"),
@@ -17342,14 +17438,28 @@ function cs() {
                           ],
                         }),
                         (0, d.jsxs)("button", {
+                          onClick: activatePdfTextModification,
+                          children: [
+                            (0, d.jsx)(Al, {}),
+                            (0, d.jsxs)("span", {
+                              children: [
+                                (0, d.jsx)("b", { children: "Modificar texto" }),
+                                (0, d.jsx)("small", {
+                                  children: "Cambiar texto existente",
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                        (0, d.jsxs)("button", {
                           onClick: () => Me("text"),
                           children: [
                             (0, d.jsx)(Al, {}),
                             (0, d.jsxs)("span", {
                               children: [
-                                (0, d.jsx)("b", { children: "Editar un PDF" }),
+                                (0, d.jsx)("b", { children: "Crear texto" }),
                                 (0, d.jsx)("small", {
-                                  children: "A\xF1adir y editar texto",
+                                  children: "A\xF1adir texto mediante di\xE1logo",
                                 }),
                               ],
                             }),
@@ -17435,6 +17545,15 @@ function cs() {
                       children: (0, d.jsx)(_a, { size: 17 }),
                     }),
                   (0, d.jsxs)("button", {
+                    className: W === "select" ? "active" : "",
+                    onClick: activateNativeTextSelection,
+                    title: "Seleccionar texto o zonas para copiar, sin modificar el PDF",
+                    children: [
+                      (0, d.jsx)(Uu, { size: 17 }),
+                      (0, d.jsx)("span", { children: "Seleccionar" }),
+                    ],
+                  }),
+                  (0, d.jsxs)("button", {
                     className: W === "hand" ? "active" : "",
                     onClick: () => Me("hand"),
                     children: [
@@ -17443,12 +17562,12 @@ function cs() {
                     ],
                   }),
                   (0, d.jsxs)("button", {
-                    className: W === "select" ? "active" : "",
-                    onClick: activateNativeTextSelection,
-                    title: "Selecciona texto existente; haz clic para editarlo directamente",
+                    className: W === "modify-text" ? "active" : "",
+                    onClick: activatePdfTextModification,
+                    title: "Modificar el texto existente del PDF, sin crear texto nuevo",
                     children: [
-                      (0, d.jsx)(Uu, { size: 17 }),
-                      (0, d.jsx)("span", { children: "Seleccionar texto" }),
+                      (0, d.jsx)(Al, { size: 17 }),
+                      (0, d.jsx)("span", { children: "Modificar texto" }),
                     ],
                   }),
                   (0, d.jsxs)("button", {
@@ -17482,7 +17601,7 @@ function cs() {
                     title: "Crear un texto nuevo mediante cuadro de diálogo",
                     children: [
                       (0, d.jsx)(Al, { size: 17 }),
-                      (0, d.jsx)("span", { children: "Texto" }),
+                      (0, d.jsx)("span", { children: "Crear texto" }),
                     ],
                   }),
                   (0, d.jsxs)("button", {
@@ -17732,7 +17851,7 @@ function cs() {
                         })
                       : $ &&
                     (0, d.jsxs)("div", {
-                      className: `pagestage ${["text", "highlight", "redact", "whiteout", "paste", "draw", "ocr-region"].includes(W) ? "cross" : ""}`,
+                      className: `pagestage ${["text", "modify-text", "highlight", "redact", "whiteout", "paste", "draw", "ocr-region"].includes(W) ? "cross" : ""}`,
                       style: { width: Math.round((680 * Cf) / 100) },
                       onClick:(n)=>(De(null),nx(n)),
 onContextMenu:gx,onPointerDown:ix,                             
@@ -17762,7 +17881,8 @@ onContextMenu:gx,onPointerDown:ix,
                           source: gn,
                           page: $,
                           width: Math.round((680 * Cf) / 100),
-                          enabled: W === "select",
+                          enabled: W === "select" || W === "modify-text",
+                          editingText: W === "modify-text",
                           onPick: wx,
                           onLink: handlePdfLink,
                           onSelection: setNativeSelectionText,
@@ -17777,6 +17897,18 @@ onContextMenu:gx,onPointerDown:ix,
                               height: `${ocrSelection.h * 100}%`,
                             },
                             children: ocrRegionBusy ? "OCR\u2026" : "OCR",
+                          }),
+                        screenSelection &&
+                          W === "select" &&
+                          (0, d.jsx)("span", {
+                            className: "screen-region-selection",
+                            style: {
+                              left: `${screenSelection.x * 100}%`,
+                              top: `${screenSelection.y * 100}%`,
+                              width: `${screenSelection.w * 100}%`,
+                              height: `${screenSelection.h * 100}%`,
+                            },
+                            children: "Zona seleccionada",
                           }),
                         (0, d.jsxs)("div", {
                           className: "marklayer",
@@ -17903,7 +18035,9 @@ onContextMenu:gx,onPointerDown:ix,
                         (0, d.jsx)("label", {
                           children:
                             U.type === "text"
-                              ? "Editar texto"
+                              ? U.replaceOriginal
+                                ? "Modificar texto existente"
+                                : "Editar texto nuevo"
                               : U.type === "image"
                                 ? "Editar imagen"
                                 : U.type === "draw"
@@ -17913,6 +18047,12 @@ onContextMenu:gx,onPointerDown:ix,
                         U.type === "text" &&
                           (0, d.jsxs)(d.Fragment, {
                             children: [
+                              U.replaceOriginal &&
+                                (0, d.jsx)("small", {
+                                  className: "existing-text-help",
+                                  children:
+                                    "El texto se sustituye en su posición original; no se crea un cuadro nuevo sobre la página.",
+                                }),
                               (0, d.jsx)("textarea", {
                                 value: U.text,
                                 onFocus: Te,

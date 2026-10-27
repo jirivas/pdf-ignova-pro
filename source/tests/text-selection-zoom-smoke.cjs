@@ -61,6 +61,11 @@ const css = fs.readFileSync(
 assert.match(html, /text-selection-utils\.js/);
 assert.match(editor, /Copiar texto seleccionado/);
 assert.match(editor, /Seleccionar texto/);
+assert.match(editor, /onClick: activateNativeTextSelection/);
+assert.match(editor, /W === "select" \|\| W === "modify-text"/);
+assert.match(editor, /if \(editingText\) \{/);
+assert.match(editor, /setSelectedKeys\(new Set\(\[i\.key\]\)\), onSelection\?\.\(i\.text\)\)/);
+assert.match(editor, /Arrastra sobre texto o marca una zona de la página/);
 assert.match(editor, /readPdfSelection/);
 assert.match(editor, /max: "500"/);
 assert.match(editor, /min: "20"/);
