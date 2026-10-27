@@ -1,0 +1,7 @@
+PDF IGNOVA PRO 1.9.17 — macOS
+
+Comparte el motor de edición nativa descrito en CAMBIOS_v1.9.17.txt.
+El texto se reescribe dentro del PDF y la página se vuelve a dibujar, sin
+rectángulos blancos, cuadros añadidos ni sustituciones visuales superpuestas.
+
+DMG universal para Apple Silicon e Intel, con firma ad hoc y sin notarización.

@@ -1,63 +1,123 @@
-// Remove original glyph operands, keeping their text advance. No painted cover
-// and no invisible copy of the old text is left in the saved content stream.
-const path = require('node:path');
-const { pathToFileURL } = require('node:url');
-async function removeOriginalText(bytes, pageIndex, edits) {
-  const base = path.join(__dirname,'node_modules/ts-pdf-edit/dist');
-  const entry = path.join(base,'index.js');
-  const [{ PdfDocument }, { scan }, { spliceLogical, hexString }] = await Promise.all([
-    import(pathToFileURL(entry).href),
-    import(pathToFileURL(path.join(base,'content/scanner.js')).href),
-    import(pathToFileURL(path.join(base,'content/splicer.js')).href),
+// Rewrite the existing text-showing operators, retaining their graphics state.
+// No rectangles, annotations or separately positioned text objects are added.
+const path=require('node:path');
+const {pathToFileURL}=require('node:url');
+async function rewriteNativeText(bytes,pageIndex,edit,fontBytes){
+  const base=path.join(__dirname,'node_modules/ts-pdf-edit/dist');
+  const load=name=>import(pathToFileURL(path.join(base,name)).href);
+  const [{PdfDocument},{scan},{spliceLogical,hexString},{PDFName},{decodeStream}]=await Promise.all([
+    load('index.js'),load('content/scanner.js'),load('content/splicer.js'),load('cos/adapters.js'),load('cos/streams.js'),
   ]);
-  const doc = await PdfDocument.open(new Uint8Array(bytes));
-  try {
-    const editor = doc.getPage(pageIndex).editor();
-    const { runs, logical } = editor.interpret();
-    const ops = scan(logical.bytes), changes=[];
-    const hits = edits.map(()=>0);
-    for (const run of runs) {
-      const selected = new Set();
-      let advance=0;
+  const doc=await PdfDocument.open(new Uint8Array(bytes));
+  try{
+    const editor=doc.getPage(pageIndex).editor(),{runs,logical}=editor.interpret();
+    const ops=scan(logical.bytes),groups=new Map();
+    const {start,end}=edit.sourcePdfBaseline||{};
+    if(!start||!end)throw Error('No se han encontrado las coordenadas nativas del texto.');
+    const dx=end[0]-start[0],dy=end[1]-start[1],length=Math.hypot(dx,dy);
+    for(const run of runs){
+      const selected=new Set();let offset=0;
       run.glyphs.forEach((glyph,index)=>{
-        const center=run.trm.apply({x:(advance+glyph.advanceText/2)/(run.fontSize*run.hScale),y:0});
-        edits.forEach((edit,k)=>{
-          const { start, end } = edit.sourcePdfBaseline || {};
-          if (!start || !end) throw new Error('Faltan las coordenadas del texto original. Vuelve a abrir el PDF.');
-          const dx=end[0]-start[0],dy=end[1]-start[1],length=Math.hypot(dx,dy);
-          const along=((center.x-start[0])*dx+(center.y-start[1])*dy)/Math.max(length,0.001);
-          const across=Math.abs((center.x-start[0])*dy-(center.y-start[1])*dx)/Math.max(length,0.001);
-          if (along>=-0.1 && along<=length+0.1 && across<Math.max(0.5,run.fontSize*0.2)) { selected.add(index);hits[k]++; }
-        });
-        advance+=glyph.advanceText;
+        const p=run.trm.apply({x:(offset+glyph.advanceText/2)/(run.fontSize*run.hScale),y:0});
+        const along=((p.x-start[0])*dx+(p.y-start[1])*dy)/Math.max(length,0.001);
+        const across=Math.abs((p.x-start[0])*dy-(p.y-start[1])*dx)/Math.max(length,0.001);
+        if(along>=-0.1&&along<=length+0.1&&across<Math.max(0.35,run.fontSize*0.12))selected.add(index);
+        offset+=glyph.advanceText;
       });
-      if (!selected.size) continue;
-      const op=ops.find(o=>o.index===run.opIndex);
-      const strings=[];
-      const collect=o=>{if(o.t==='str')strings.push(o);if(o.t==='arr')o.items.forEach(collect);};
+      if(!selected.size)continue;
+      const op=ops.find(o=>o.index===run.opIndex),tokens=[];
+      const collect=o=>{if(o.t==='str')tokens.push(o);if(o.t==='arr')o.items.forEach(collect);};
       op?.operands.forEach(collect);
-      const token=strings.find(s=>s.start===run.stringStart&&s.end===run.stringEnd);
-      if (!token || !['Tj','TJ'].includes(op.op)) throw new Error('Este fragmento usa una estructura de texto que todavía no admite modificación segura.');
-      const bpg=run.composite?2:1,parts=[];
-      let index=0;
-      while(index<run.glyphs.length){
-        const removed=selected.has(index),start=index;
-        let displacement=0;
-        while(index<run.glyphs.length&&selected.has(index)===removed){displacement+=run.glyphs[index].advanceText;index++;}
-        parts.push(removed?String(-1000*displacement/(run.fontSize*run.hScale)):hexString(token.bytes.subarray(start*bpg,index*bpg)));
-      }
-      changes.push({start:op.op==='Tj'?op.start:token.start,end:op.op==='Tj'?op.end:token.end,text:op.op==='Tj'?`[ ${parts.join(' ')} ] TJ`:parts.join(' ')});
+      if(!op||!['Tj','TJ',"'",'"'].includes(op.op)||!tokens.some(s=>s.start===run.stringStart&&s.end===run.stringEnd))
+        throw Error('Este texto está dentro de una estructura PDF que todavía no permite edición nativa segura.');
+      if(run.isType3||run.renderMode===3)throw Error('Este fragmento no es texto visible editable con una fuente normal.');
+      if(!groups.has(op.index))groups.set(op.index,{op,runs:[]});
+      groups.get(op.index).runs.push({...run,selected});
     }
-    if(hits.some(n=>n===0)) throw new Error('No se pudo localizar el texto original para sustituirlo con seguridad.');
-    // Apply right-to-left so byte addresses remain valid within every stream.
-    for(const change of changes.sort((a,b)=>b.start-a.start)) {
+    if(!groups.size)throw Error('No se ha localizado el texto nativo seleccionado.');
+    let inserted=false,substitute=null;
+    const encodeWithOriginalMap=(run,font,text)=>{
+      const dictionary=editor.resolver.subDict('Font',run.fontName);
+      const cmap=dictionary?.lookup(PDFName.of('ToUnicode'));
+      if(cmap?.dict){
+        const source=new TextDecoder('latin1').decode(decodeStream(cmap)),map=new Map();
+        const unicode=hex=>{let s='';for(let i=0;i<hex.length;i+=4)s+=String.fromCharCode(parseInt(hex.slice(i,i+4),16));return s;};
+        const add=(code,dest)=>map.set(unicode(dest),Uint8Array.from(code.match(/../g).map(h=>parseInt(h,16))));
+        for(const block of source.matchAll(/beginbfchar([\s\S]*?)endbfchar/g))
+          for(const m of block[1].matchAll(/<([\da-f]+)>\s*<([\da-f]+)>/gi))add(m[1],m[2]);
+        for(const block of source.matchAll(/beginbfrange([\s\S]*?)endbfrange/g)){
+          for(const m of block[1].matchAll(/<([\da-f]+)>\s*<([\da-f]+)>\s*(<([\da-f]+)>|\[([^\]]*)\])/gi)){
+            const first=parseInt(m[1],16),last=parseInt(m[2],16),destinations=m[5]?.match(/<([\da-f]+)>/gi);
+            for(let code=first;code<=last&&code-first<65536;code++){
+              const dest=destinations?destinations[code-first]?.slice(1,-1):(parseInt(m[4],16)+code-first).toString(16).padStart(m[4].length,'0');
+              if(dest)add(code.toString(16).padStart(m[1].length,'0'),dest);
+            }
+          }
+        }
+        const bytes=[],keys=[...map.keys()].sort((a,b)=>b.length-a.length);
+        for(let i=0;i<text.length;){const key=keys.find(k=>text.startsWith(k,i));if(!key)return null;bytes.push(...map.get(key));i+=key.length;}
+        return {bytes:Uint8Array.from(bytes),missing:[]};
+      }
+      return font.encode(text);
+    };
+    const changes=[];
+    for(const {op,runs:chosen} of groups.values()){
+      const segments=[];
+      const values=op.op==='TJ'?op.operands.find(o=>o.t==='arr').items:op.operands.filter(o=>o.t==='str');
+      for(const value of values){
+        if(value.t==='num'){segments.push(`[ ${value.v} ] TJ`);continue;}
+        if(value.t!=='str')continue;
+        const run=chosen.find(r=>r.stringStart===value.start&&r.stringEnd===value.end);
+        if(!run){segments.push(`${hexString(value.bytes)} Tj`);continue;}
+        const font=editor.resolver.font(run.fontName),bpg=run.composite?2:1;
+        let i=0;
+        while(i<run.glyphs.length){
+          const removed=run.selected.has(i),first=i;let oldAdvance=0;
+          while(i<run.glyphs.length&&run.selected.has(i)===removed){oldAdvance+=run.glyphs[i].advanceText;i++;}
+          if(!removed){segments.push(`${hexString(value.bytes.subarray(first*bpg,i*bpg))} Tj`);continue;}
+          let newAdvance=0;
+          if(!inserted){
+            const text=String(edit.text||'');
+            if(/[\r\n]/.test(text))throw Error('Modifica una línea cada vez. Para crear párrafos utiliza Crear texto.');
+            const encoded=encodeWithOriginalMap(run,font,text);
+            if(encoded&&!encoded.missing.length){
+              segments.push(`${hexString(encoded.bytes)} Tj`);
+              const sourceGlyphs=font.decode(value.bytes);
+              const ordinary=sourceGlyphs.findIndex(g=>!g.isSingleByteSpace);
+              const charSpacing=ordinary<0?0:run.glyphs[ordinary].advanceText/run.hScale-sourceGlyphs[ordinary].width1000/1000*run.fontSize;
+              const space=sourceGlyphs.findIndex(g=>g.isSingleByteSpace);
+              const wordSpacing=space<0?0:run.glyphs[space].advanceText/run.hScale-sourceGlyphs[space].width1000/1000*run.fontSize-charSpacing;
+              newAdvance=font.decode(encoded.bytes).reduce((sum,g)=>sum+(g.width1000/1000*run.fontSize+charSpacing+(g.isSingleByteSpace?wordSpacing:0))*run.hScale,0);
+            }else{
+              if(!fontBytes)throw Error(`La fuente original no contiene estos caracteres y no está instalada: ${edit.font||'fuente del PDF'}`);
+              if(!substitute){
+                const fontkit=(await import('@pdf-lib/fontkit')).default;
+                doc._inner.registerFontkit(fontkit);
+                const embedded=await doc._inner.embedFont(new Uint8Array(fontBytes),{subset:true});
+                const name=doc._inner.getPage(pageIndex).node.newFontDictionary('IgnovaNative',embedded.ref);
+                substitute={embedded,name:name.toString()};
+              }
+              segments.push(`${substitute.name} ${run.fontSize} Tf ${substitute.embedded.encodeText(text).toString()} Tj /${run.fontName} ${run.fontSize} Tf`);
+              newAdvance=substitute.embedded.widthOfTextAtSize(text,run.fontSize)*run.hScale;
+            }
+            inserted=true;
+          }
+          segments.push(`[ ${(-1000*(oldAdvance-newAdvance)/(run.fontSize*run.hScale)).toFixed(5)} ] TJ`);
+        }
+      }
+      if(op.op==="'")segments.unshift('T*');
+      if(op.op==='"'){const nums=op.operands.filter(o=>o.t==='num');segments.unshift(`${nums[0].v} Tw ${nums[1].v} Tc T*`);}
+      changes.push({start:op.start,end:op.end,text:segments.join('\n')});
+    }
+    for(const change of changes.sort((a,b)=>b.start-a.start)){
       spliceLogical(logical,change.start,change.end,new TextEncoder().encode(change.text));
-      // Each splice needs the rebuilt logical bytes for subsequent replacements.
-      editor.runs=null;editor.logical=null;
-      Object.assign(logical,editor.interpret().logical);
+      editor.runs=null;editor.logical=null;Object.assign(logical,editor.interpret().logical);
     }
     doc.onContentChanged();
-    return (await doc.save()).bytes;
-  } finally {await doc.close();}
+    // The application keeps the remaining pages in their original sources.
+    // Return only this page so each text edit does not clone a whole large PDF.
+    const editedPage=await doc.extractRange(pageIndex,pageIndex);
+    try{return(await editedPage.save()).bytes;}finally{await editedPage.close();}
+  }finally{await doc.close();}
 }
-module.exports={removeOriginalText};
+module.exports={rewriteNativeText};

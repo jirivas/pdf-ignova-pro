@@ -4,9 +4,9 @@ PDF Ignova Pro is an Open Source Windows and macOS desktop application for profe
 
 ## Current public release
 
-**1.9.16** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
+**1.9.17** is the current public Open Source test release. GitHub Actions produces separate Windows x64 and universal macOS builds from the same source.
 
-The 1.9.16 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
+The 1.9.17 source passes the project smoke tests and functional OCR tests on Windows and macOS. It uses a voluntary support reminder **at most once every 30 days**, after the first 30 days of use. No feature is disabled if the user does not activate a support license.
 
 ## Main functions
 
@@ -16,7 +16,7 @@ The 1.9.16 source passes the project smoke tests and functional OCR tests on Win
 - Creation of a new blank A4 PDF for building documents from pasted or added pages
 - Separate native-text editing and new-text creation workflows
 - Select only copies native PDF text or marks a page region; it never edits the document
-- Modify text replaces existing PDF text in place, without displaying a page text box, frame or resize handles
+- Modify text rewrites the native PDF text operators as you delete and type, preserving the original graphics state without covers or added text objects
 - Create text opens a dedicated dialog and inserts the new content at the chosen position
 - Text editing that preserves the original font, size, colour, rotation and page background whenever possible
 - Text and annotation tools with fixed-position multiline text, persistent font and text colour

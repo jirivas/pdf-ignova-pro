@@ -171,58 +171,6 @@
   background: #1268e826;
 }
 
-.mark.text.pdf-text-edit {
-  box-sizing: border-box;
-  min-width: 18px;
-  padding: 0;
-  background: transparent;
-}
-
-.mark.text.pdf-text-edit.pdf-text-pristine {
-  background: transparent;
-}
-
-.mark.text.pdf-text-edit.pdf-text-pristine .text-editor {
-  color: transparent;
-  caret-color: #111;
-}
-
-.mark.text.pdf-text-edit.pdf-text-pristine.chosen .text-editor {
-  color: inherit;
-}
-
-.mark.text.pdf-text-edit.pdf-text-pristine:not(.pdf-text-live-edit) .text-editor:focus {
-  background: transparent;
-}
-
-.mark.text.pdf-text-edit.pdf-text-pristine.pdf-text-live-edit {
-  background: #fff;
-}
-
-.mark.text.pdf-text-edit.pdf-text-pristine.pdf-text-live-edit .text-editor {
-  color: inherit;
-}
-
-.mark.text.pdf-text-edit.chosen {
-  outline: 0;
-}
-
-.mark.text.pdf-text-edit .text-drag,
-.mark.text.pdf-text-edit .resize-handle {
-  display: none !important;
-}
-
-.mark.text.pdf-text-edit .text-editor:focus {
-  background: transparent;
-  box-shadow: none;
-}
-
-.mark.text.pdf-text-edit .pdf-text-replacement {
-  position: relative;
-  z-index: 2;
-  pointer-events: auto;
-  user-select: text;
-}
 
 .toolbar button.modify-text-active,
 .toolbar button.modify-text-active:hover {
@@ -230,29 +178,23 @@
   color: #fff;
 }
 
-.pdf-text-edit.pdf-modify-mode.chosen .text-editor {
-  color: inherit;
-  caret-color: #16803c;
-  outline: 1px solid #16803c;
-}
-
-.pdf-text-edit .text-editor::selection {
-  background: #b8e8c7;
-  color: inherit;
-}
 
 .pdf-modify-layer .pdf-text-hit:hover {
-  outline-color: #16803c;
-  background: #16803c1a;
+  outline: none;
+  background: transparent;
 }
 
-.pdf-original-cover {
-  position: absolute;
-  display: block;
-  z-index: 1;
-  background: #fff;
-  pointer-events: none;
+.pdf-text-hit[data-native-editor="true"] {
+  caret-color: #16803c;
+  outline: none;
+  background: transparent;
+  color: transparent;
 }
+.pdf-modify-layer .pdf-text-hit::selection {
+  color: transparent;
+  background: #16803c44;
+}
+
 
 .ocr-region-selection {
   position: absolute;

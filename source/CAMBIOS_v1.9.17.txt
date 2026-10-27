@@ -1,0 +1,24 @@
+PDF IGNOVA PRO 1.9.17 — EDICIÓN NATIVA DE TEXTO
+
+Se sustituye por completo el mecanismo anterior de modificación de texto.
+
+- El cursor se coloca en el texto existente. Suprimir, Retroceso, selección de
+  letras, pegar y escribir actúan sobre ese texto, como en una línea de Word.
+- Cada modificación reescribe los operadores de texto del propio PDF y vuelve
+  a dibujar la página. No crea una marca, cuadro de texto ni tapado blanco.
+- La vista y el archivo guardado utilizan el mismo contenido PDF modificado.
+- Se conserva el estado gráfico original: fuente, tamaño, negrita, color,
+  posición y fondo. Los caracteres nuevos se codifican en la fuente original;
+  si no existen en el subconjunto incrustado, se usa esa familia instalada.
+- La selección normal permanece azul y la selección de edición es verde.
+- Los fondos, líneas y textos próximos no se cubren ni se borran.
+- Ctrl/Comando+S espera a que termine la última modificación antes de guardar.
+- La página editada se independiza de sus copias y la edición admite deshacer.
+- Las estructuras y fuentes que no permiten una modificación segura muestran
+  un error explícito, sin generar una sustitución por encima del documento.
+
+Pruebas de navegador: borrar y escribir letras, fondo coloreado, línea vecina,
+ausencia de objetos de texto superpuestos, guardado, vaciado, nueva escritura y
+reapertura. El fondo y la línea se comparan píxel a píxel con el original.
+
+Instalador Windows sin firma comercial.

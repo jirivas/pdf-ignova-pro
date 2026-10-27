@@ -11,10 +11,19 @@ const {
 } = require("./commercial-license.cjs");
 const { getMessages, normalizeLanguage } = require("./native-i18n.cjs");
 const { fitPdfToPaper, normalizePaperSize } = require("./print-paper.cjs");
-const { removeOriginalText } = require("./native-text-rewrite.cjs");
+const { rewriteNativeText } = require("./native-text-rewrite.cjs");
 
-ipcMain.handle("remove-original-text", async (_event, bytes, pageIndex, edits) =>
-  removeOriginalText(bytes, pageIndex, edits));
+ipcMain.handle("rewrite-native-text", async (_event, bytes, pageIndex, edit) => {
+  const normalized = value => String(value || "").replace(/^[A-Z]{6}\+/, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+  const originalName = normalized(edit.sourceFontName);
+  const sameFamily = originalName.includes(normalized(edit.font)) ||
+    (edit.font === "Arial" && originalName.includes("helvetica")) ||
+    (edit.font === "Times New Roman" && originalName.includes("times")) ||
+    (edit.font === "Courier New" && originalName.includes("courier"));
+  const fontPath = sameFamily ? findSystemFontFile(edit.font, !!edit.bold, !!edit.italic, true) : null;
+  const fontBytes = fontPath ? await fsp.readFile(fontPath) : null;
+  return rewriteNativeText(bytes, pageIndex, edit, fontBytes);
+});
 
 app.setName("PDF Ignova Pro");
 app.setAppUserModelId("com.ignova.pdf-ignova-pro");
@@ -203,6 +212,10 @@ const windowsFontFiles = Object.freeze({
     regular: ["arial.ttf"], bold: ["arialbd.ttf"],
     italic: ["ariali.ttf"], boldItalic: ["arialbi.ttf"],
   },
+  "Arial Narrow": {
+    regular: ["arialn.ttf"], bold: ["arialnb.ttf"],
+    italic: ["arialni.ttf"], boldItalic: ["arialnbi.ttf"],
+  },
   "Book Antiqua": {
     regular: ["bkant.ttf"], bold: ["antquab.ttf"],
     italic: ["antquai.ttf"], boldItalic: ["antquabi.ttf"],
@@ -292,6 +305,10 @@ const macFontFiles = Object.freeze({
     regular: ["Arial.ttf"], bold: ["Arial Bold.ttf"],
     italic: ["Arial Italic.ttf"], boldItalic: ["Arial Bold Italic.ttf"],
   },
+  "Arial Narrow": {
+    regular: ["Arial Narrow.ttf"], bold: ["Arial Narrow Bold.ttf"],
+    italic: ["Arial Narrow Italic.ttf"], boldItalic: ["Arial Narrow Bold Italic.ttf"],
+  },
   "Book Antiqua": {
     regular: ["Book Antiqua.ttf"], bold: ["Book Antiqua Bold.ttf"],
     italic: ["Book Antiqua Italic.ttf"], boldItalic: ["Book Antiqua Bold Italic.ttf"],
@@ -352,7 +369,7 @@ function macFontDirectories() {
   ])];
 }
 
-function findSystemFontFile(family, bold, italic) {
+function findSystemFontFile(family, bold, italic, strictStyle = false) {
   const styles = process.platform === "darwin"
     ? (macFontFiles[family] || windowsFontFiles[family])
     : windowsFontFiles[family];
@@ -361,7 +378,7 @@ function findSystemFontFile(family, bold, italic) {
     ? macFontDirectories()
     : windowsFontDirectories();
   const requested = bold && italic ? "boldItalic" : bold ? "bold" : italic ? "italic" : "regular";
-  const fallbacks = [requested, bold ? "bold" : null, italic ? "italic" : null, "regular"]
+  const fallbacks = (strictStyle ? [requested] : [requested, bold ? "bold" : null, italic ? "italic" : null, "regular"])
     .filter((value, index, values) => value && values.indexOf(value) === index);
   for (const style of fallbacks) {
     for (const fileName of styles[style] || []) {

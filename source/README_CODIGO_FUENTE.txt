@@ -1,7 +1,7 @@
-PDF IGNOVA PRO 1.9.16 — CÓDIGO FUENTE DISTRIBUIDO
+PDF IGNOVA PRO 1.9.17 — CÓDIGO FUENTE DISTRIBUIDO
 
 Este paquete contiene el código JavaScript y los recursos ejecutados por la
-aplicación Electron PDF Ignova Pro 1.9.16.
+aplicación Electron PDF Ignova Pro 1.9.17.
 
 NOVEDADES DE ESTA VERSIÓN
 La interfaz incorpora español, inglés, portugués, alemán, francés, chino
@@ -41,12 +41,13 @@ Añade un panel Páginas con una cuadrícula de miniaturas, reordenación por
 arrastre y apertura con doble clic, y un panel Unir archivos que admite selección
 o arrastre de varios PDF para formar un único documento cuyas páginas pueden
 revisarse y reordenarse antes de guardar.
-La versión 1.9.16 corrige la edición desde su mecanismo de dibujo y guardado.
-«Modificar texto» permite borrar y escribir sobre la página con selección verde.
-«Seleccionar» permanece azul y permite copiar sin editar. Al guardar se retiran
-los caracteres originales del contenido PDF para que no reaparezcan al reabrir.
-Las estructuras que no pueden modificarse con seguridad generan un error de
-guardado explícito. «Crear texto» mantiene el diálogo independiente.
+La versión 1.9.17 reconstruye la modificación como edición nativa: borrar y
+escribir reescribe los operadores de texto dentro del PDF. La página se vuelve
+a dibujar con ese mismo contenido. No hay cuadros, marcas de texto ni tapados
+superpuestos. Se conserva el estado gráfico y se reutiliza la fuente original.
+«Seleccionar» permanece azul y la edición utiliza selección verde. Si la fuente
+no permite codificar un carácter nuevo se busca la misma familia instalada; si
+no está disponible, se muestra un error. «Crear texto» conserva su diálogo.
 
 LICENCIA DEL CÓDIGO PROPIO
 El código propio se distribuye bajo GNU GPL versión 3 o posterior

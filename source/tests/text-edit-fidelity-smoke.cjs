@@ -93,9 +93,6 @@ const css = fs.readFileSync(
 
 assert.match(html, /text-edit-utils\.js/);
 assert.match(editor, /createTextRange/);
-assert.match(editor, /captureTextAppearance/);
-assert.match(editor, /backgroundPatchData/);
-assert.match(editor, /backgroundPatchData: null/);
 assert.doesNotMatch(editor, /backgroundImage: n\.backgroundPatchData/);
 assert.match(editor, /sourceFontKey/);
 assert.match(editor, /No se pudo reutilizar la fuente incrustada del PDF/);
@@ -108,7 +105,7 @@ assert.match(editor, /setNewTextDialog\(\{/);
 assert.match(editor, /editingText: W === "modify-text"/);
 assert.match(editor, /contentEditable: n\.replaceOriginal \? W === "modify-text"/);
 assert.match(editor, /pdf-text-replacement/);
-assert.match(editor, /removeOriginalText/);
+assert.match(editor, /rewriteNativeText/);
 assert.match(editor, /Modificar texto existente/);
 assert.match(editor, /Editar texto nuevo/);
 assert.match(editor, /screenSelectionDrag/);
@@ -133,15 +130,8 @@ assert.match(editor, /selectOrganizerPage/);
 assert.match(editor, /event\.ctrlKey \|\| event\.metaKey/);
 assert.match(editor, /\$\{isSelected \? "selected" : ""\}/);
 assert.match(css, /\.pdf-text-hit\.pdf-text-selected/);
-assert.match(
-  css,
-  /\.mark\.text\.pdf-text-edit\.pdf-text-pristine\.chosen \.text-editor\s*\{\s*color:\s*inherit/,
-);
-assert.match(css, /\.mark\.text\.pdf-text-edit\.chosen\s*\{\s*outline:\s*0/);
-assert.match(css, /\.mark\.text\.pdf-text-edit \.text-editor:focus/);
 assert.match(css, /\.new-text-modal textarea/);
-assert.match(css, /\.pdf-original-cover\s*\{[^}]*z-index:\s*1/s);
-assert.match(css, /\.mark\.text\.pdf-text-edit \.pdf-text-replacement/);
+assert.doesNotMatch(css, /\.pdf-original-cover/);
 assert.match(css, /\.screen-region-selection/);
 assert.match(css, /\.marklayer > \.mark,[^}]*z-index:\s*2/s);
 assert.match(css, /\.merge-pdf-button/);

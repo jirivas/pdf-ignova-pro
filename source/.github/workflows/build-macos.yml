@@ -75,7 +75,7 @@ jobs:
           helper_root="$app_path/Contents/Resources/app.asar.unpacked/scripts"
           test -d "$app_path"
           test -x "$executable"
-          test "$(plutil -extract CFBundleShortVersionString raw "$app_path/Contents/Info.plist")" = "1.9.16"
+          test "$(plutil -extract CFBundleShortVersionString raw "$app_path/Contents/Info.plist")" = "1.9.17"
           plutil -p "$app_path/Contents/Info.plist" | grep -q "com.adobe.pdf"
           for binary in "$executable" "$helper_root/ocr-macos" "$helper_root/convert-tiff-macos"; do
             test -x "$binary"
@@ -94,11 +94,11 @@ jobs:
           app_path="release-mac/PDF Ignova Pro-darwin-universal/PDF Ignova Pro.app"
           staging="$RUNNER_TEMP/pdf-ignova-dmg"
           mount_point="$RUNNER_TEMP/pdf-ignova-mounted"
-          asset="PDF-Ignova-Pro-1.9.16-macOS-Universal-unnotarized.dmg"
+          asset="PDF-Ignova-Pro-1.9.17-macOS-Universal-unnotarized.dmg"
           mkdir -p "$staging" "$mount_point"
           ditto "$app_path" "$staging/PDF Ignova Pro.app"
           ln -s /Applications "$staging/Applications"
-          hdiutil create -volname "PDF Ignova Pro 1.9.16" -srcfolder "$staging" -ov -format UDZO "$asset"
+          hdiutil create -volname "PDF Ignova Pro 1.9.17" -srcfolder "$staging" -ov -format UDZO "$asset"
           hdiutil verify "$asset"
           hdiutil attach -readonly -nobrowse -mountpoint "$mount_point" "$asset"
           test -d "$mount_point/PDF Ignova Pro.app"
@@ -109,8 +109,8 @@ jobs:
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v7
         with:
-          name: pdf-ignova-pro-1.9.16-macos-universal-unnotarized
+          name: pdf-ignova-pro-1.9.17-macos-universal-unnotarized
           path: |
-            PDF-Ignova-Pro-1.9.16-macOS-Universal-unnotarized.dmg
-            PDF-Ignova-Pro-1.9.16-macOS-Universal-unnotarized.dmg.sha256.txt
+            PDF-Ignova-Pro-1.9.17-macOS-Universal-unnotarized.dmg
+            PDF-Ignova-Pro-1.9.17-macOS-Universal-unnotarized.dmg.sha256.txt
           if-no-files-found: error

@@ -13095,6 +13095,7 @@ function normalizePdfEditorFont(...e) {
     .replace(/[,_-]+/g, " ");
   let t = [
     [/\baptos\b/i, "Aptos"],
+    [/arial\s*narrow|arialnarrow/i, "Arial Narrow"],
     [/\barial\b|helvetica/i, "Arial"],
     [/book\s*antiqua/i, "Book Antiqua"],
     [/\bcalibri\b/i, "Calibri"],
@@ -13132,6 +13133,10 @@ function PdfEditableTextLayer({
   enabled: l,
   editingText,
   replacements = [],
+  activeNativeKey,
+  onNativeInput,
+  onNativeFinish,
+  onNativeSave,
   onPick: u,
   onLink,
   onSelection,
@@ -13397,6 +13402,32 @@ function PdfEditableTextLayer({
                   fontFamily: i.cssFont || i.font,
                   fontWeight: i.bold ? 700 : 400,
                   fontStyle: i.italic ? "italic" : "normal",
+                  overflow: editingText && activeNativeKey === i.key ? "visible" : "hidden",
+                  outline: editingText ? "none" : void 0,
+                  background: editingText ? "transparent" : void 0,
+                },
+                contentEditable: editingText && activeNativeKey === i.key,
+                suppressContentEditableWarning: !0,
+                spellCheck: !1,
+                "data-native-editor": editingText && activeNativeKey === i.key ? "true" : void 0,
+                ref: (element) => {
+                  if (element && document.activeElement !== element && !(editingText && activeNativeKey === i.key))
+                    element.textContent = i.text;
+                },
+                onInput: (event) => onNativeInput?.((event.currentTarget.innerText || "").replace(/\r/g, "")),
+                onBlur: () => onNativeFinish?.(),
+                onKeyDown: (event) => {
+                  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+                    event.preventDefault();onNativeSave?.();return;
+                  }
+                  if (["Enter", "Escape"].includes(event.key)) {
+                    event.preventDefault(); event.currentTarget.blur();
+                  }
+                },
+                onPaste: (event) => {
+                  if (!editingText || activeNativeKey !== i.key) return;
+                  event.preventDefault();
+                  document.execCommand("insertText", !1, event.clipboardData.getData("text/plain").replace(/[\r\n]+/g," "));
                 },
                 onPointerDown: (event) => {
                   if (editingText || event.button !== 0 || i.link) return;
@@ -13421,7 +13452,8 @@ function PdfEditableTextLayer({
                     return;
                   }
                   if (editingText) {
-                    (r.preventDefault(), r.stopPropagation(), u?.(i));
+                    r.stopPropagation();
+                    if (activeNativeKey !== i.key) {r.preventDefault();u?.(i,{x:r.clientX,y:r.clientY});}
                     return;
                   }
                   let selectedText =
@@ -13439,7 +13471,6 @@ function PdfEditableTextLayer({
                   }
                   (setSelectedKeys(new Set([i.key])), onSelection?.(i.text));
                 },
-                children: `${i.text}${i.hasEOL ? "\n" : /\s$/.test(i.text) ? "" : " "}`,
               },
               i.key,
             ),
@@ -13522,6 +13553,8 @@ function cs() {
     p = (0, I.useRef)(null),
     c = (0, I.useRef)(null),
     ocrDrag = (0, I.useRef)(null),
+    nativeSources = (0, I.useRef)([]),
+    nativeEditSession = (0, I.useRef)(null),
     screenSelectionDrag = (0, I.useRef)(null),
     zoomWheelAnchor = (0, I.useRef)(null),
     dualSelectionAnchors = (0, I.useRef)({}),
@@ -13538,6 +13571,7 @@ function cs() {
     [on, gs] = (0, I.useState)(null),
     [Tl, Lf] = (0, I.useState)(null),
     [W, Me] = (0, I.useState)("hand"),
+    [nativeEditView, setNativeEditView] = (0, I.useState)(null),
     [Cf, Gu] = (0, I.useState)(82),
     [dualPanelOpen, setDualPanelOpen] = (0, I.useState)(!1),
     [pagePanelOpen, setPagePanelOpen] = (0, I.useState)(!1),
@@ -13580,6 +13614,9 @@ function cs() {
     [newTextDraft, setNewTextDraft] = (0, I.useState)(""),
     [nativeSelectionText, setNativeSelectionText] = (0, I.useState)("");
   ((0, I.useEffect)(() => {
+    nativeSources.current = g;
+  }, [g]),
+    (0, I.useEffect)(() => {
     o.current = w;
   }, [w]),
     (0, I.useEffect)(() => {
@@ -13709,7 +13746,8 @@ function cs() {
       },
       [F, readNativePdfSelection],
     ),
-    activateNativeTextSelection = (0, I.useCallback)(() => {
+    activateNativeTextSelection = (0, I.useCallback)(async () => {
+      try {await nativeEditSession.current?.flush?.();} catch {return;}
       (Me("select"),
         De(null),
         setScreenSelection(null),
@@ -13717,7 +13755,8 @@ function cs() {
         window.getSelection?.()?.removeAllRanges?.(),
         F("Arrastra sobre texto o marca una zona de la página"));
     }, [F]),
-    activatePdfTextModification = (0, I.useCallback)(() => {
+    activatePdfTextModification = (0, I.useCallback)(async () => {
+      try {await nativeEditSession.current?.flush?.();} catch {return;}
       (Me("modify-text"),
         De(null),
         setNativeSelectionText(""),
@@ -13792,7 +13831,7 @@ function cs() {
       [Q, El],
     ),
     Ul = (0, I.useCallback)(
-      () => ({ pages: Wt(o.current), marks: Lt(f.current) }),
+      () => ({ pages: Wt(o.current), marks: Lt(f.current), sources: nativeSources.current.slice() }),
       [],
     ),
     Te = (0, I.useCallback)(() => {
@@ -13802,6 +13841,7 @@ function cs() {
         Ol((n) => n + 1));
     }, [Ul]),
     bf = (0, I.useCallback)((n) => {
+      if (n.sources) {nativeSources.current = n.sources; S(n.sources);}
       let s = Wt(n.pages),
         L = Lt(n.marks);
       ((o.current = s),
@@ -13841,92 +13881,80 @@ function cs() {
       },
       [aa],
     ),
-    wx = (0, I.useCallback)(
-      (n) => {
-        if (!$) return;
-        Me("modify-text");
-        let s = `${$.docId}:${$.index}:${n.key}`,
-          L = f.current.find(
-            (k) => k.pageId === $.id && k.sourceTextKey === s,
-          );
-        if (L) {
-          (De(L.id),
-            kl(!0),
-            setTimeout(
-              () =>
-                document
-                  .querySelector(`[data-mark-id="${L.id}"] .text-editor`)
-                  ?.focus(),
-              0,
-            ));
-          return;
-        }
-        let y = Ee(n.left / n.pageWidth, 0, 0.98),
-          A = Ee(n.top / n.pageHeight, 0, 0.98),
-          R = Ee((n.left - 2) / n.pageWidth, 0, 0.99),
-          ne = Ee((n.top - n.height * 0.2 - 1) / n.pageHeight, 0, 0.99),
-          oe = Ee((n.width + 5) / n.pageWidth, 0.01, 1 - R),
-          Y = Ee((n.height * 1.4 + 3) / n.pageHeight, 0.012, 1 - ne),
-          appearance = window.PDF_IGNOVA_TEXT_EDIT?.captureTextAppearance(
-            document.querySelector(".pagestage .canvas-wrap canvas"),
-            {
-              left: n.left - 2,
-              top: n.top - n.height * 0.2 - 1,
-              width: n.width + 5,
-              height: n.height * 1.4 + 3,
-              pageWidth: n.pageWidth,
-              pageHeight: n.pageHeight,
-            },
-          ),
-          k = {
-            id: Da(),
-            pageId: $.id,
-            type: "text",
-            text: n.text,
-            x: y,
-            y: A,
-            w: Ee(n.width / n.pageWidth + 0.008, 0.025, 1 - y),
-            h: Ee(n.height / n.pageHeight + 0.006, 0.018, 1 - A),
-            color: appearance?.textColor || "#111111",
-            backgroundColor: appearance?.backgroundColor || "#ffffff",
-            backgroundPatchData: null,
-            size: Ee(Math.round(n.fontSizePdf || n.height), 6, 144),
-            fontSizeRatio:
-              (n.fontSizePdf || n.height) /
-              Math.max(n.pageWidthPoints || n.pageWidth, 1),
-            pageWidthPoints: n.pageWidthPoints || n.pageWidth,
-            font: n.font,
-            cssFont: n.cssFont || n.font,
-            bold: n.bold,
-            italic: !!n.italic,
-            underline: !1,
-            sourceFontName: n.sourceFontName || n.font,
-            sourceFontKey: n.sourceFontKey || "",
-            angle: (n.angle * 180) / Math.PI,
-            preserveSourceFont: !0,
-            textDirty: !1,
-            styleDirty: !1,
-            replaceOriginal: !0,
-            sourceTextKey: s,
-            sourceText: n.text,
-            sourcePdfBaseline: n.sourcePdfBaseline,
-            sourceRect: { x: R, y: ne, w: oe, h: Y },
-            crop: Pu(),
-          };
-        (aa((_) => [..._, k]),
-          De(k.id),
-          kl(!0),
-          F("Edita sobre el texto: borra o escribe. Pulsa fuera para terminar"),
-          setTimeout(
-            () =>
-              document
-                .querySelector(`[data-mark-id="${k.id}"] .text-editor`)
-                ?.focus(),
-            0,
-          ));
-      },
-      [$, W, aa, F],
-    ),
+    commitNativeText = (0, I.useCallback)(async () => {
+      const session = nativeEditSession.current;
+      if (!session) return;
+      clearTimeout(session.timer);
+      if (session.text === session.appliedText) return;
+      if (session.pendingText === session.text && session.pending) return session.pending;
+      const text = session.text, version = session.version;
+      session.pendingText = text;
+      session.pending = (async () => {
+        if (!window.pdfEstudio?.rewriteNativeText)
+          throw new Error("La edición nativa requiere la aplicación de escritorio actualizada");
+        const bytes = await window.pdfEstudio.rewriteNativeText(
+          session.source.bytes, session.page.index, { ...session.item, text },
+        );
+        if (nativeEditSession.current !== session || version !== session.version) return;
+        const updated = { ...session.source, id: session.outputId, bytes: new Uint8Array(bytes) };
+        const sources = nativeSources.current.filter(source => source.id !== updated.id).concat(updated);
+        nativeSources.current = sources;
+        S(sources);
+        const pages = o.current.map(page => page.id === session.page.id ? { ...page, docId: updated.id, index: 0 } : page);
+        o.current = pages; H(pages);
+        session.appliedText = text;
+        session.error = null;
+      })().catch(error => {
+        session.error = error;
+        session.pendingText = null;
+        F(error.message || "No se pudo modificar el texto nativo");
+        throw error;
+      });
+      return session.pending;
+    }, [F]),
+    finishNativeText = (0, I.useCallback)(async () => {
+      const session = nativeEditSession.current;
+      if (!session) return;
+      await commitNativeText();
+      if (nativeEditSession.current !== session) return;
+      if (session.appliedText !== session.text) await commitNativeText();
+      nativeEditSession.current = null;
+      setNativeEditView(null);
+    }, [commitNativeText]),
+    updateNativeText = (0, I.useCallback)((text) => {
+      const session = nativeEditSession.current;
+      if (!session) return;
+      session.text = text; session.version += 1;
+      clearTimeout(session.timer);
+      session.timer = setTimeout(() => {commitNativeText().catch(() => {});}, 120);
+    }, [commitNativeText]),
+    wx = (0, I.useCallback)(async (item, point) => {
+      if (!$) return;
+      try {
+        await finishNativeText();
+        const page = o.current.find(page => page.id === $.id);
+        const source = nativeSources.current.find(source => source.id === page?.docId);
+        if (!source) return;
+        Te(); Me("modify-text"); De(null);
+        const session = {
+          source, page: { ...page }, item, outputId: Da(), text: item.text,
+          appliedText: item.text, version: 0, timer: null, pending: null,
+          flush: finishNativeText,
+        };
+        nativeEditSession.current = session;
+        setNativeEditView(session);
+        setTimeout(() => {
+          const element = document.querySelector('[data-native-editor="true"]');
+          if (!element) return;
+          element.focus();
+          const caret = point && document.caretRangeFromPoint?.(point.x, point.y);
+          if (caret && element.contains(caret.startContainer)) {
+            const selection = window.getSelection();
+            selection.removeAllRanges(); selection.addRange(caret);
+          }
+        }, 0);
+      } catch (error) {F(error.message);}
+    }, [$, finishNativeText, Te, F]),
     handlePdfLink = (0, I.useCallback)(
       (link) => {
         let target = window.PDF_IGNOVA_LINKS?.normalizeLinkTarget(
@@ -13970,19 +13998,21 @@ function cs() {
       if (textItem) wx(textItem);
       else F("Este enlace no tiene texto editable asociado");
     }, [linkChoice, wx, F]),
-    hn = (0, I.useCallback)(() => {
+    hn = (0, I.useCallback)(async () => {
+      try {await finishNativeText();} catch {return;}
       let n = r.current.pop();
       n &&
         (m.current.push(Ul()),
         bf(n),
         Ol((s) => s + 1),
         F("Acci\xF3n deshecha"));
-    }, [bf, Ul, F]),
-    Sf = (0, I.useCallback)(() => {
+    }, [bf, Ul, F, finishNativeText]),
+    Sf = (0, I.useCallback)(async () => {
+      try {await finishNativeText();} catch {return;}
       let n = m.current.pop();
       n &&
         (r.current.push(Ul()), bf(n), Ol((s) => s + 1), F("Acci\xF3n rehecha"));
-    }, [bf, Ul, F]),
+    }, [bf, Ul, F, finishNativeText]),
     Ts = (0, I.useCallback)(
       async (n, s) => {
         let L = Array.from(n).filter(
@@ -15134,6 +15164,7 @@ function cs() {
       return new Uint8Array(await he.arrayBuffer());
     },
     Sn = async (n) => {
+      await finishNativeText();
       let {
           PDFDocument: s,
           StandardFonts: L,
@@ -15259,23 +15290,15 @@ function cs() {
       for (let he of o.current) {
         let R = pe.get(he.docId);
         if (!R) {
-          let Y = g.find((ga) => ga.id === he.docId);
+          let Y = nativeSources.current.find((ga) => ga.id === he.docId);
           if (!Y) continue;
           ((R = await s.load(Y.bytes)), pe.set(he.docId, R));
         }
-        const replacements = f.current.filter(mark => mark.pageId === he.id && mark.replaceOriginal && (mark.textDirty || mark.styleDirty));
-        let pageSource = R;
-        if (replacements.length) {
-          if (!window.pdfEstudio?.removeOriginalText) throw new Error("La sustitución del texto requiere la versión de escritorio actualizada");
-          const original = g.find(source => source.id === he.docId);
-          const cleaned = await window.pdfEstudio.removeOriginalText(original.bytes, he.index, replacements);
-          pageSource = await s.load(new Uint8Array(cleaned));
-        }
-        let [ne] = await _.copyPages(pageSource, [he.index]);
+        let [ne] = await _.copyPages(R, [he.index]);
         (_.addPage(ne),
           ne.setRotation(y(ss(ne.getRotation().angle + he.rotation))));
         let oe = ne.getSize();
-        for (let Y of f.current.filter((ga) => ga.pageId === he.id)) {
+        for (let Y of f.current.filter((ga) => ga.pageId === he.id && !ga.replaceOriginal)) {
           if (
             Y.type === "text" &&
             Y.replaceOriginal &&
@@ -17905,12 +17928,15 @@ onContextMenu:gx,onPointerDown:ix,
                           currentIndex: currentSearchIndex,
                         }),
                         (0, d.jsx)(PdfEditableTextLayer, {
-                          source: gn,
-                          page: $,
+                          source: nativeEditView?.page.id === $.id ? nativeEditView.source : gn,
+                          page: nativeEditView?.page.id === $.id ? nativeEditView.page : $,
                           width: Math.round((680 * Cf) / 100),
                           enabled: W === "select" || W === "modify-text",
                           editingText: W === "modify-text",
-                          replacements: T.filter((mark) => mark.pageId === $.id && mark.replaceOriginal),
+                          activeNativeKey: nativeEditView?.page.id === $.id ? nativeEditView.item.key : void 0,
+                          onNativeInput: updateNativeText,
+                          onNativeFinish: () => finishNativeText().catch(() => {}),
+                          onNativeSave: () => vf(),
                           onPick: wx,
                           onLink: handlePdfLink,
                           onSelection: setNativeSelectionText,
@@ -17941,31 +17967,7 @@ onContextMenu:gx,onPointerDown:ix,
                         (0, d.jsxs)("div", {
                           className: "marklayer",
                           children: [
-                            T.filter(
-                              (n) =>
-                                n.pageId === $.id &&
-                                n.type === "text" &&
-                                n.replaceOriginal &&
-                                n.sourceRect &&
-                                (n.textDirty || n.styleDirty || (W === "modify-text" && zl === n.id)),
-                            ).map((n) =>
-                              (0, d.jsx)(
-                                "span",
-                                {
-                                  className: "pdf-original-cover",
-                                  style: {
-                                    left: `${n.sourceRect.x * 100}%`,
-                                    top: `${n.sourceRect.y * 100}%`,
-                                    width: `${n.sourceRect.w * 100}%`,
-                                    height: `${n.sourceRect.h * 100}%`,
-                                    backgroundColor:
-                                      n.backgroundColor || "#ffffff",
-                                  },
-                                },
-                                `cover-${n.id}`,
-                              ),
-                            ),
-                            T.filter((n) => n.pageId === $.id).map(Sx),
+                            T.filter((n) => n.pageId === $.id && !n.replaceOriginal).map(Sx),
                           ],
                         }),
                       ],
@@ -17997,8 +17999,8 @@ onContextMenu:gx,onPointerDown:ix,
                 className: "status",
                 children: [
                   (0, d.jsx)("span", {
-                    children: g.length
-                      ? `${g.length} archivo${g.length === 1 ? "" : "s"}`
+                    children: O.length
+                      ? `${O.length} archivo${O.length === 1 ? "" : "s"}`
                       : "Sin documento",
                   }),
                   (0, d.jsxs)("div", {
