@@ -14,7 +14,7 @@ const uiCss = read("app/editor-assets/editor-ui-v16.css");
 const i18nExtra = read("app/editor-assets/i18n-extra.js");
 const installer = read("installer/PDF-Ignova-Pro.iss");
 
-assert.equal(packageJson.version, "1.9.17");
+assert.equal(packageJson.version, "1.9.18");
 
 assert.match(editorHtml, /text-edit-utils\.js/);
 assert.match(editor, /PDF_IGNOVA_TEXT_EDIT/);
@@ -40,8 +40,8 @@ assert.match(editor, /mergePanelOpen/);
 
 assert.match(i18nExtra, /\["Modificar texto", "Modify text"/);
 assert.match(i18nExtra, /\["Crear texto", "Create text"/);
-assert.match(installer, /PDF-Ignova-Pro-1\.9\.17-Setup-Windows-x64-unsigned/);
-assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.17.txt")));
-assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.17_MAC.txt")));
+assert.match(installer, /PDF-Ignova-Pro-1\.9\.18-Setup-Windows-x64-unsigned/);
+assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.18.txt")));
+assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.18_MAC.txt")));
 
-console.log("version 1.9.17 smoke test passed");
+console.log("version 1.9.18 smoke test passed");

@@ -184,6 +184,33 @@
   background: transparent;
 }
 
+.pdf-modify-layer .pdf-text-hit:not([data-native-editor="true"]) {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pdf-text-hit[data-native-editor="true"] {
+  touch-action: none;
+  white-space: pre;
+  overflow: hidden;
+  contain: layout style;
+}
+
+.toolbar-redact-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 5px;
+  font-size: 11px;
+}
+
+.toolbar-redact-color input {
+  width: 28px;
+  height: 25px;
+  padding: 1px;
+  border: 1px solid #cbd5e1;
+}
+
 .pdf-text-hit[data-native-editor="true"] {
   caret-color: #16803c;
   outline: none;

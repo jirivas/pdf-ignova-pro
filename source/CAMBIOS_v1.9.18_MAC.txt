@@ -1,0 +1,17 @@
+PDF IGNOVA PRO 1.9.18 — ESTABILIDAD DE LA EDICIÓN
+
+- Tapado pasa del menú Dibujo a la barra principal, con selector de color.
+- La selección de letras queda dentro de la línea activa, incluso al arrastrar
+  el ratón a otras líneas o utilizar Ctrl+A y las flechas verticales.
+- Enter, los pegados de varias líneas y el texto que sobrepasa el margen se
+  detienen sin perder el texto válido ni bloquear el editor.
+- Se respeta el margen de contenido y el siguiente fragmento de la misma línea.
+  El motor PDF valida también la anchura con las métricas de la fuente.
+- El redibujado se prepara fuera de pantalla y se muestra al terminar, evitando
+  borrar el lienzo entre pulsaciones. El foco no desplaza la vista.
+- Mientras se edita, la rueda no cambia de página al alcanzar un extremo.
+- Un error restaura el último texto aplicado y permite continuar con las
+  herramientas, editar otra línea y guardar.
+- Se mantiene la edición nativa, sin cuadros ni tapados automáticos.
+
+Instalador Windows sin firma comercial. macOS con firma ad hoc, sin notarizar.

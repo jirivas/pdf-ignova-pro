@@ -13010,7 +13010,7 @@ function qh({ source: e, page: a, width: t, onSize: l }) {
       return (
         (async () => {
           if (!e || !u.current || !f) return;
-          m(!0);
+          if (!u.current.dataset.rendered) m(!0);
           try {
             let x = await (await ds(e)).getPage(a.index + 1),
               D = ss(a.baseRotation + a.rotation),
@@ -13026,18 +13026,25 @@ function qh({ source: e, page: a, width: t, onSize: l }) {
                 0.5,
                 Math.min(devicePixelRatio || 1, 2, safePixelRatio),
               );
-            ((p.width = Math.round(P.width * c)),
-              (p.height = Math.round(P.height * c)),
-              (p.style.width = `${P.width}px`),
-              (p.style.height = `${P.height}px`),
-              l?.(P.width, P.height));
-            let g = p.getContext("2d");
+            // Render off screen: leave the last complete page visible while
+            // native text is rewritten. Never clear the visible canvas mid-edit.
+            const buffer = document.createElement("canvas");
+            buffer.width = Math.round(P.width * c);
+            buffer.height = Math.round(P.height * c);
+            let g = buffer.getContext("2d");
             if (!g) return;
-            (g.setTransform(c, 0, 0, c, 0, 0),
-              g.clearRect(0, 0, P.width, P.height),
-              (s = x.render({ canvasContext: g, viewport: P })),
-              await s.promise,
-              n || m(!1));
+            g.setTransform(c, 0, 0, c, 0, 0);
+            s = x.render({ canvasContext: g, viewport: P });
+            await s.promise;
+            if (n || !u.current) return;
+            if (p.width !== buffer.width) p.width = buffer.width;
+            if (p.height !== buffer.height) p.height = buffer.height;
+            p.style.width = `${P.width}px`;
+            p.style.height = `${P.height}px`;
+            p.getContext("2d").drawImage(buffer, 0, 0);
+            p.dataset.rendered = "true";
+            l?.(P.width, P.height);
+            m(!1);
           } catch {
             n || m(!1);
           }
@@ -13137,6 +13144,7 @@ function PdfEditableTextLayer({
   onNativeInput,
   onNativeFinish,
   onNativeSave,
+  onNativeLimit,
   onPick: u,
   onLink,
   onSelection,
@@ -13197,6 +13205,13 @@ function PdfEditableTextLayer({
       dragSelection.current = null;
     };
   return (
+    (0, I.useLayoutEffect)(() => {
+      if (!editingText || activeNativeKey == null) return;
+      const element = document.querySelector('[data-native-editor="true"]');
+      const item = o.find(item => item.key === activeNativeKey);
+      if (!element || !item) return;
+      return window.PDF_IGNOVA_NATIVE_EDITOR?.attach(element, item, onNativeInput, onNativeLimit);
+    }, [editingText, activeNativeKey, o, onNativeInput, onNativeLimit]),
     (0, I.useEffect)(() => {
       setSelectedKeys(new Set());
       dragSelection.current = null;
@@ -13286,6 +13301,27 @@ function PdfEditableTextLayer({
                 .filter(Boolean);
             D =
               window.PDF_IGNOVA_TEXT_EDIT?.orderTextItems(D) || D;
+            // Use the existing content gutter as the margin. A following run
+            // on the same baseline is a hard boundary (columns/format changes).
+            const gutter = Math.min(b.width * 0.05, ...D.filter(item => item.left > 0).map(item => item.left));
+            for (const item of D) {
+              const cos = Math.cos(item.angle), sin = Math.sin(item.angle);
+              const origin = {x:item.left, y:item.top + item.height};
+              const candidates = [];
+              if (cos > 0.001) candidates.push((b.width-gutter-origin.x)/cos);
+              if (cos < -0.001) candidates.push((gutter-origin.x)/cos);
+              if (sin > 0.001) candidates.push((b.height-gutter-origin.y)/sin);
+              if (sin < -0.001) candidates.push((gutter-origin.y)/sin);
+              for (const next of D) {
+                if (next === item) continue;
+                const dx=next.left-origin.x, dy=next.top+next.height-origin.y;
+                const along=dx*cos+dy*sin, across=Math.abs(-dx*sin+dy*cos);
+                if (along >= item.width-0.5 && across < item.height*0.35) candidates.push(along-1);
+              }
+              item.editWidth = Math.max(item.width, Math.min(...candidates.filter(n => n >= 0)));
+              if (!Number.isFinite(item.editWidth)) item.editWidth=item.width;
+              item.maxWidthPdf = item.editWidth / b.scale;
+            }
             let annotations = [];
             try {
               let linkData = await r.getAnnotations({ intent: "display" });
@@ -13395,14 +13431,14 @@ function PdfEditableTextLayer({
                 style: {
                   left: i.left,
                   top: i.top,
-                  width: i.width,
+                  width: editingText && activeNativeKey === i.key ? i.editWidth : i.width,
                   height: Math.max(10, i.height),
                   transform: `rotate(${i.angle}rad)`,
                   fontSize: i.height,
                   fontFamily: i.cssFont || i.font,
                   fontWeight: i.bold ? 700 : 400,
                   fontStyle: i.italic ? "italic" : "normal",
-                  overflow: editingText && activeNativeKey === i.key ? "visible" : "hidden",
+                  overflow: "hidden",
                   outline: editingText ? "none" : void 0,
                   background: editingText ? "transparent" : void 0,
                 },
@@ -13414,20 +13450,14 @@ function PdfEditableTextLayer({
                   if (element && document.activeElement !== element && !(editingText && activeNativeKey === i.key))
                     element.textContent = i.text;
                 },
-                onInput: (event) => onNativeInput?.((event.currentTarget.innerText || "").replace(/\r/g, "")),
                 onBlur: () => onNativeFinish?.(),
                 onKeyDown: (event) => {
                   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
                     event.preventDefault();onNativeSave?.();return;
                   }
-                  if (["Enter", "Escape"].includes(event.key)) {
+                  if (event.key === "Escape") {
                     event.preventDefault(); event.currentTarget.blur();
                   }
-                },
-                onPaste: (event) => {
-                  if (!editingText || activeNativeKey !== i.key) return;
-                  event.preventDefault();
-                  document.execCommand("insertText", !1, event.clipboardData.getData("text/plain").replace(/[\r\n]+/g," "));
                 },
                 onPointerDown: (event) => {
                   if (editingText || event.button !== 0 || i.link) return;
@@ -13905,9 +13935,17 @@ function cs() {
         session.appliedText = text;
         session.error = null;
       })().catch(error => {
-        session.error = error;
-        session.pendingText = null;
-        F(error.message || "No se pudo modificar el texto nativo");
+        // A stale failed request must not discard newer typing.
+        if (nativeEditSession.current === session && version === session.version) {
+          session.error = error;
+          session.pendingText = null;
+          session.text = session.appliedText;
+          session.version += 1;
+          document.querySelector('[data-native-editor="true"]')?.dispatchEvent(
+            new CustomEvent("ignova-native-restore", {detail:session.appliedText}),
+          );
+          F(error.message || "No se pudo modificar el texto nativo");
+        }
         throw error;
       });
       return session.pending;
@@ -13915,16 +13953,22 @@ function cs() {
     finishNativeText = (0, I.useCallback)(async () => {
       const session = nativeEditSession.current;
       if (!session) return;
-      await commitNativeText();
+      while (nativeEditSession.current === session && session.appliedText !== session.text) {
+        try { await commitNativeText(); }
+        catch {
+          // A stale error does not cancel newer input. A current error restores
+          // the applied text, so leaving the editor never gets stuck.
+          if (session.error) break;
+        }
+      }
       if (nativeEditSession.current !== session) return;
-      if (session.appliedText !== session.text) await commitNativeText();
       nativeEditSession.current = null;
       setNativeEditView(null);
     }, [commitNativeText]),
     updateNativeText = (0, I.useCallback)((text) => {
       const session = nativeEditSession.current;
       if (!session) return;
-      session.text = text; session.version += 1;
+      session.text = text; session.version += 1; session.error = null;
       clearTimeout(session.timer);
       session.timer = setTimeout(() => {commitNativeText().catch(() => {});}, 120);
     }, [commitNativeText]),
@@ -13946,7 +13990,7 @@ function cs() {
         setTimeout(() => {
           const element = document.querySelector('[data-native-editor="true"]');
           if (!element) return;
-          element.focus();
+          element.focus({preventScroll:true});
           const caret = point && document.caretRangeFromPoint?.(point.x, point.y);
           if (caret && element.contains(caret.startContainer)) {
             const selection = window.getSelection();
@@ -15050,7 +15094,7 @@ function cs() {
           (k > 0
             ? (L || A) && Ue < w.length - 1
             : k < 0 && (L || y) && Ue > 0) &&
-          !z.current
+          !z.current && !nativeEditSession.current
         ) {
           ((z.current = !0),
             Hl(Ue + k),
@@ -17004,23 +17048,6 @@ function cs() {
                     onClick: () => Me("highlight"),
                     children: [(0, d.jsx)(of, {}), "Resaltar"],
                   }),
-                  (0, d.jsxs)("button", {
-                    className: W === "redact" ? "active" : "",
-                    onClick: () => Me("redact"),
-                    children: [(0, d.jsx)(mf, {}), "Tapado"],
-                  }),
-                  (0, d.jsxs)("label", {
-                    className: "drawing-menu-color",
-                    title: "Color del tapado",
-                    children: [
-                      (0, d.jsx)("span", { children: "Color del tapado" }),
-                      (0, d.jsx)("input", {
-                        type: "color",
-                        value: redactColor,
-                        onChange: (n) => setRedactColor(n.target.value),
-                      }),
-                    ],
-                  }),
                   (0, d.jsx)("hr", {}),
                   (0, d.jsxs)("button", {
                     onClick: () => Qu(),
@@ -17655,6 +17682,19 @@ function cs() {
                     ],
                   }),
                   (0, d.jsxs)("button", {
+                    className: W === "redact" ? "active" : "",
+                    onClick: async () => {await finishNativeText(); Me("redact");},
+                    title: "Tapar una zona del PDF",
+                    children: [(0, d.jsx)(mf, {size:17}), (0, d.jsx)("span", {children:"Tapado"})],
+                  }),
+                  W === "redact" && (0, d.jsxs)("label", {
+                    className: "toolbar-redact-color",
+                    title: "Color del tapado",
+                    children: [(0, d.jsx)("span", {children:"Color"}), (0, d.jsx)("input", {
+                      type:"color", value:redactColor, onChange:event=>setRedactColor(event.target.value),
+                    })],
+                  }),
+                  (0, d.jsxs)("button", {
                     className: W === "draw" ? "active" : "",
                     onClick: () => Me("draw"),
                     children: [
@@ -17937,6 +17977,7 @@ onContextMenu:gx,onPointerDown:ix,
                           onNativeInput: updateNativeText,
                           onNativeFinish: () => finishNativeText().catch(() => {}),
                           onNativeSave: () => vf(),
+                          onNativeLimit: F,
                           onPick: wx,
                           onLink: handlePdfLink,
                           onSelection: setNativeSelectionText,

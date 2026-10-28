@@ -21,6 +21,13 @@ const {rewriteNativeText}=require('../native-text-rewrite.cjs');
     assert.equal(ops.filter(o=>o.op==='BT').length,1,'no extra text object is created');
     assert.equal(ops.filter(o=>o.op==='Tf').length,1,'the original font is reused');
     await result.close();console.log(`PASS native rewrite ${show.includes('TJ')?'TJ':'Tj'}: original font, colour and position; no cover or text object`);
+    const bounded={sourcePdfBaseline:{start:[60,700],end:[250,700]},maxWidthPdf:190};
+    await assert.rejects(rewriteNativeText(await doc.save(),0,{...bounded,text:'DESBORDE '.repeat(30)}),/margen/);
+    await assert.rejects(rewriteNativeText(await doc.save(),0,{...bounded,text:'Otra\nlínea'}),/una línea/);
+    const fitting=await PdfDocument.open(await rewriteNativeText(await doc.save(),0,{...bounded,text:'Texto corto'}));
+    assert.ok((await fitting.getPage(0).text()).plainText.includes('Texto corto'));
+    await fitting.close();
+    console.log('PASS native line boundary: overflow and newlines rejected; next valid edit works');
   }
   const fontPath=['C:/Windows/Fonts/arial.ttf','/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'].find(p=>fs.existsSync(p));
   if(fontPath){

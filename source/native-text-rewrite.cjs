@@ -100,6 +100,13 @@ async function rewriteNativeText(bytes,pageIndex,edit,fontBytes){
               segments.push(`${substitute.name} ${run.fontSize} Tf ${substitute.embedded.encodeText(text).toString()} Tj /${run.fontName} ${run.fontSize} Tf`);
               newAdvance=substitute.embedded.widthOfTextAtSize(text,run.fontSize)*run.hScale;
             }
+            if (Number.isFinite(edit.maxWidthPdf) && edit.maxWidthPdf > 0) {
+              const before=run.trm.apply({x:0,y:0});
+              const after=run.trm.apply({x:newAdvance/(run.fontSize*run.hScale),y:0});
+              const advancePdf=Math.hypot(after.x-before.x,after.y-before.y);
+              if (advancePdf > edit.maxWidthPdf + 0.25)
+                throw Error('El texto supera el margen de esta línea. Acórtalo para continuar.');
+            }
             inserted=true;
           }
           segments.push(`[ ${(-1000*(oldAdvance-newAdvance)/(run.fontSize*run.hScale)).toFixed(5)} ] TJ`);
