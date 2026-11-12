@@ -14236,7 +14236,13 @@ function cs() {
     },
     ks = async (n, s) => {
       let L = n.target.files ? Array.from(n.target.files) : [];
-      ((n.target.value = ""), L.length && (await Jx(s, L)));
+      try {
+        if (L.length) await Jx(s, L);
+      } finally {
+        // Keep the browser File objects attached until every byte has been
+        // read. Clearing first can expose an empty file on slower systems.
+        n.target.value = "";
+      }
     },
     ox = (n, s, L) => {
       (Ta(s),

@@ -91,6 +91,9 @@ function createStaticServer() {
         mimeType: "application/pdf",
         buffer: Buffer.from(bytes),
       };
+      assert.ok(bytes.length > 1_000, "generated PDF bytes must not be empty");
+      assert.equal(fixture.buffer.length, bytes.length, "fixture buffer must preserve all bytes");
+      console.log("MIXED-SIZE FIXTURE", `${fixture.buffer.length} bytes`);
     }
     await page.locator("input[type=file]").first().setInputFiles(fixture);
     for (let attempt = 0; attempt < 24; attempt += 1) {
