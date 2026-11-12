@@ -4,6 +4,8 @@ contextBridge.exposeInMainWorld("pdfEstudio", {
   platform: process.platform,
   rewriteNativeText: (bytes, pageIndex, edit) => ipcRenderer.invoke("rewrite-native-text", bytes, pageIndex, edit),
   signPdf: payload => ipcRenderer.invoke("sign-pdf", payload),
+  inspectP12: (certificateBytes, password) =>
+    ipcRenderer.invoke("inspect-p12", certificateBytes, password),
   readClipboardImage: () => ipcRenderer.invoke("read-clipboard-image"),
   chooseAndConvertDocuments: () => ipcRenderer.invoke("choose-and-convert-documents"),
   convertDocumentPaths: paths => ipcRenderer.invoke("convert-document-paths", paths),

@@ -87,7 +87,7 @@ jobs:
           helper_root="$app_path/Contents/Resources/app.asar.unpacked/scripts"
           test -d "$app_path"
           test -x "$executable"
-          test "$(plutil -extract CFBundleShortVersionString raw "$app_path/Contents/Info.plist")" = "1.9.19"
+          test "$(plutil -extract CFBundleShortVersionString raw "$app_path/Contents/Info.plist")" = "1.9.20"
           plutil -p "$app_path/Contents/Info.plist" | grep -q "com.adobe.pdf"
           for binary in "$executable" "$helper_root/ocr-macos" "$helper_root/convert-tiff-macos"; do
             test -x "$binary"
@@ -107,11 +107,11 @@ jobs:
           app_path="release-mac/PDF Ignova Pro-darwin-universal/PDF Ignova Pro.app"
           staging="$RUNNER_TEMP/pdf-ignova-dmg"
           mount_point="$RUNNER_TEMP/pdf-ignova-mounted"
-          asset="PDF-Ignova-Pro-1.9.19-macOS-Universal-unnotarized.dmg"
+          asset="PDF-Ignova-Pro-1.9.20-macOS-Universal-unnotarized.dmg"
           mkdir -p "$staging" "$mount_point"
           ditto "$app_path" "$staging/PDF Ignova Pro.app"
           ln -s /Applications "$staging/Applications"
-          hdiutil create -volname "PDF Ignova Pro 1.9.19" -srcfolder "$staging" -ov -format UDZO "$asset"
+          hdiutil create -volname "PDF Ignova Pro 1.9.20" -srcfolder "$staging" -ov -format UDZO "$asset"
           hdiutil verify "$asset"
           hdiutil attach -readonly -nobrowse -mountpoint "$mount_point" "$asset"
           test -d "$mount_point/PDF Ignova Pro.app"
@@ -122,31 +122,33 @@ jobs:
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v7
         with:
-          name: pdf-ignova-pro-1.9.19-macos-universal-unnotarized
+          name: pdf-ignova-pro-1.9.20-macos-universal-unnotarized
           path: |
-            source/PDF-Ignova-Pro-1.9.19-macOS-Universal-unnotarized.dmg
-            source/PDF-Ignova-Pro-1.9.19-macOS-Universal-unnotarized.dmg.sha256.txt
+            source/PDF-Ignova-Pro-1.9.20-macOS-Universal-unnotarized.dmg
+            source/PDF-Ignova-Pro-1.9.20-macOS-Universal-unnotarized.dmg.sha256.txt
           if-no-files-found: error
           retention-days: 30
 
-      - name: Add macOS installer to release 1.9.19
+      - name: Add macOS installer to release 1.9.20
         working-directory: source
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_NOTES: |
-            PDF Ignova Pro 1.9.19 para Windows 10/11 x64 y macOS 12 o posterior.
+            PDF Ignova Pro 1.9.20 para Windows 10/11 x64 y macOS 12 o posterior.
 
             Descargas recomendadas:
             - Windows: Setup.exe, con accesos directos y desinstalación normal.
             - macOS: DMG universal para Apple Silicon e Intel; arrastra la aplicación a Aplicaciones.
 
-            Correcciones de 1.9.19:
-            - Visualización correcta de la última página cuando su tamaño difiere de las anteriores.
-            - Miniatura seleccionada desplazada automáticamente a la zona visible del panel.
-            - Cada página comienza desde su esquina superior izquierda sin heredar el desplazamiento anterior.
+            Correcciones de 1.9.20:
+            - Selección de páginas tipo Excel mediante arrastre, Ctrl y Mayús.
+            - Asa independiente para mover páginas sin alterar el grupo seleccionado.
+            - Comprobación local de certificados .P12/.PFX y mensajes claros de contraseña o vigencia.
+            - Firma visual propia con texto, color, nombre y fecha automática.
+            - Sello visible renovado para las firmas criptográficas con certificado.
 
-            Funciones principales de 1.9.19:
+            Funciones principales de 1.9.20:
             - «Seleccionar» copia texto o marca una zona sin modificar el PDF.
             - «Modificar texto» sustituye el original en su posición, sin cuadro superpuesto, sombras ni duplicaciones.
             - «Crear texto» abre un diálogo independiente y conserva la posición elegida.
@@ -156,7 +158,7 @@ jobs:
 
             Los binarios aún no tienen una firma comercial. Windows puede mostrar SmartScreen y macOS puede pedir abrir la aplicación desde el menú contextual. El DMG de macOS está firmado de forma ad hoc, pero no notarizado por Apple.
         run: |
-          asset="PDF-Ignova-Pro-1.9.19-macOS-Universal-unnotarized.dmg"
-          gh release view v1.9.19 --repo "$GITHUB_REPOSITORY"
-          gh release upload v1.9.19 "$asset" "$asset.sha256.txt" --clobber --repo "$GITHUB_REPOSITORY"
-          gh release edit v1.9.19 --title "PDF Ignova Pro 1.9.19" --notes "$RELEASE_NOTES" --latest --repo "$GITHUB_REPOSITORY"
+          asset="PDF-Ignova-Pro-1.9.20-macOS-Universal-unnotarized.dmg"
+          gh release view v1.9.20 --repo "$GITHUB_REPOSITORY"
+          gh release upload v1.9.20 "$asset" "$asset.sha256.txt" --clobber --repo "$GITHUB_REPOSITORY"
+          gh release edit v1.9.20 --title "PDF Ignova Pro 1.9.20" --notes "$RELEASE_NOTES" --latest --repo "$GITHUB_REPOSITORY"

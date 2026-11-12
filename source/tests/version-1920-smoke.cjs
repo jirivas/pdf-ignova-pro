@@ -13,8 +13,11 @@ const css = read("app/editor-assets/editor-entry.css");
 const uiCss = read("app/editor-assets/editor-ui-v16.css");
 const i18nExtra = read("app/editor-assets/i18n-extra.js");
 const installer = read("installer/PDF-Ignova-Pro.iss");
+const main = read("main.cjs");
+const preload = read("preload.cjs");
+const p12Utils = read("p12-utils.cjs");
 
-assert.equal(packageJson.version, "1.9.19");
+assert.equal(packageJson.version, "1.9.20");
 
 assert.match(editorHtml, /text-edit-utils\.js/);
 assert.match(editor, /PDF_IGNOVA_TEXT_EDIT/);
@@ -42,12 +45,24 @@ assert.match(editor, /data-page-id/);
 assert.match(editor, /scrollIntoView\(\{ block: "nearest", inline: "nearest" \}\)/);
 assert.match(editor, /u\.current\.scrollTop = 0/);
 assert.match(editor, /typeof _\.bytes !== "function"/);
+assert.match(editorHtml, /page-selection-utils\.js/);
+assert.match(editor, /beginPageSelection/);
+assert.match(editor, /extendOrganizerSelection/);
+assert.match(editor, /thumb-drag-handle/);
+assert.match(editor, /signatureMode/);
+assert.match(editor, /inspectSelectedCertificate/);
+assert.match(editor, /FIRMA VISUAL/);
+assert.match(editor, /signatureText/);
 assert.match(uiCss, /\.thumbs\s*\{[^}]*overflow-y:\s*scroll/s);
+assert.match(uiCss, /\.signature-mode-switch/);
+assert.match(main, /ipcMain\.handle\("inspect-p12"/);
+assert.match(preload, /inspectP12/);
+assert.match(p12Utils, /INVALID_PASSWORD/);
 
 assert.match(i18nExtra, /\["Modificar texto", "Modify text"/);
 assert.match(i18nExtra, /\["Crear texto", "Create text"/);
-assert.match(installer, /PDF-Ignova-Pro-1\.9\.19-Setup-Windows-x64-unsigned/);
-assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.19.txt")));
-assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.19_MAC.txt")));
+assert.match(installer, /PDF-Ignova-Pro-1\.9\.20-Setup-Windows-x64-unsigned/);
+assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.20.txt")));
+assert.ok(fs.existsSync(path.join(root, "CAMBIOS_v1.9.20_MAC.txt")));
 
-console.log("version 1.9.19 smoke test passed");
+console.log("version 1.9.20 smoke test passed");

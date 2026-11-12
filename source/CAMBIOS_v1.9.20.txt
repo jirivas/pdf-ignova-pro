@@ -1,0 +1,13 @@
+PDF IGNOVA PRO 1.9.20 — SELECCIÓN DE PÁGINAS Y FIRMAS
+
+- Selección de páginas tipo Excel: arrastre continuo con el ratón, Ctrl para
+  añadir o quitar páginas y Mayús para seleccionar desde el punto de anclaje.
+- La selección queda separada del movimiento: las páginas se reordenan desde
+  el asa lateral, evitando grupos marcados de forma accidental.
+- Comprobación local de certificados .P12 y .PFX antes de firmar: contraseña,
+  titular, vigencia y presencia de clave privada.
+- Mensajes específicos para contraseña incorrecta, certificado caducado o
+  archivo que no contiene una clave privada válida.
+- Nueva firma visual propia con texto de firma, color, nombre y fecha automática.
+- La firma con certificado conserva un sello visible renovado y añade la firma
+  criptográfica verificable al PDF.

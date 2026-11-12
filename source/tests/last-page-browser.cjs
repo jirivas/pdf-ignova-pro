@@ -112,6 +112,25 @@ function createStaticServer() {
     }
     assert.equal(await page.locator(".thumb").count(), 16, "all thumbnails must load");
 
+    const thumbnails = page.locator(".thumb");
+    const selectedIndexes = async () => thumbnails.evaluateAll(items =>
+      items.flatMap((item, index) => item.classList.contains("selected") ? [index] : []),
+    );
+    const startBox = await thumbnails.nth(1).boundingBox();
+    const middleBox = await thumbnails.nth(2).boundingBox();
+    const endBox = await thumbnails.nth(3).boundingBox();
+    await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(middleBox.x + middleBox.width / 2, middleBox.y + middleBox.height / 2);
+    await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2);
+    await page.mouse.up();
+    assert.deepEqual(await selectedIndexes(), [1, 2, 3], "mouse drag selects a continuous page range");
+    await thumbnails.nth(2).click({ modifiers: ["Control"] });
+    assert.deepEqual(await selectedIndexes(), [1, 3], "Ctrl toggles one page without losing the group");
+    await thumbnails.nth(0).click();
+    await thumbnails.nth(3).click({ modifiers: ["Shift"] });
+    assert.deepEqual(await selectedIndexes(), [0, 1, 2, 3], "Shift selects from the Excel-style anchor");
+
     const pageNumber = page.locator('.status input[type="number"]');
     await pageNumber.fill("16");
     await pageNumber.press("Enter");

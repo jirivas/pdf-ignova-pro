@@ -13588,6 +13588,8 @@ function cs() {
     screenSelectionDrag = (0, I.useRef)(null),
     zoomWheelAnchor = (0, I.useRef)(null),
     thumbnailPanel = (0, I.useRef)(null),
+    pageSelectionDrag = (0, I.useRef)(null),
+    organizerSelectionDrag = (0, I.useRef)(null),
     dualSelectionAnchors = (0, I.useRef)({}),
     searchRequest = (0, I.useRef)(0),
     saveDialogInProgress = (0, I.useRef)(!1),
@@ -13624,6 +13626,11 @@ function cs() {
     [_u, Xh] = (0, I.useState)(""),
     [Vu, Yh] = (0, I.useState)(null),
     [bs, jh] = (0, I.useState)(""),
+    [signatureMode, setSignatureMode] = (0, I.useState)("certificate"),
+    [signatureText, setSignatureText] = (0, I.useState)(""),
+    [signatureColor, setSignatureColor] = (0, I.useState)("#123f78"),
+    [certificateStatus, setCertificateStatus] = (0, I.useState)(null),
+    [certificateChecking, setCertificateChecking] = (0, I.useState)(!1),
     [Ss, Zh] = (0, I.useState)("Aprobaci\xF3n del documento"),
     [vs, Qh] = (0, I.useState)(""),
     [Is, Kh] = (0, I.useState)(""),
@@ -13673,6 +13680,18 @@ function cs() {
   (0, I.useEffect)(() => {
     O.length < 2 && setDualPanelOpen(!1);
   }, [O.length]);
+  (0, I.useEffect)(() => {
+    let finishMouseSelection = () => {
+      pageSelectionDrag.current = null;
+      organizerSelectionDrag.current = null;
+    };
+    window.addEventListener("pointerup", finishMouseSelection);
+    window.addEventListener("pointercancel", finishMouseSelection);
+    return () => {
+      window.removeEventListener("pointerup", finishMouseSelection);
+      window.removeEventListener("pointercancel", finishMouseSelection);
+    };
+  }, []);
   (0, I.useEffect)(() => {
     if (!Q) return;
     let selectedIds = [...ue];
@@ -14245,19 +14264,112 @@ function cs() {
       }
     },
     ox = (n, s, L) => {
-      (Ta(s),
-        ka((y) => {
-          if (n.shiftKey && on !== null)
-            return new Set(
-              w.slice(Math.min(on, L), Math.max(on, L) + 1).map((A) => A.id),
-            );
-          if (n.ctrlKey || n.metaKey) {
-            let A = new Set(y);
-            return (A.has(s) ? A.delete(s) : A.add(s), A);
-          }
-          return new Set([s]);
-        }),
-        n.shiftKey || gs(L));
+      let pageIds = w.map((page) => page.id),
+        nextSelection = window.PDF_IGNOVA_PAGE_SELECTION.clickSelection(
+          ue,
+          pageIds,
+          L,
+          {
+            shift: n.shiftKey,
+            additive: n.ctrlKey || n.metaKey,
+            anchorIndex: on,
+          },
+        );
+      (Ta(s), ka(nextSelection), n.shiftKey || gs(L));
+    },
+    beginPageSelection = (event, page, pageIndex) => {
+      if (event.button !== 0 || event.target.closest(".thumb-drag-handle")) return;
+      event.preventDefault();
+      let pageIds = w.map((item) => item.id),
+        additive = event.ctrlKey || event.metaKey,
+        usesAnchor = event.shiftKey && Number.isInteger(on),
+        startIndex = usesAnchor ? on : pageIndex,
+        baseSelection = additive ? new Set(ue) : new Set(),
+        nextSelection = window.PDF_IGNOVA_PAGE_SELECTION.clickSelection(
+          ue,
+          pageIds,
+          pageIndex,
+          {
+            shift: event.shiftKey,
+            additive,
+            anchorIndex: on,
+          },
+        );
+      pageSelectionDrag.current = {
+        pageIds,
+        startIndex,
+        baseSelection,
+        additive,
+      };
+      (Ta(page.id), ka(nextSelection), usesAnchor || gs(pageIndex));
+    },
+    extendPageSelection = (event, page, pageIndex) => {
+      let selection = pageSelectionDrag.current;
+      if (!selection || !(event.buttons & 1)) return;
+      event.preventDefault();
+      let nextSelection = window.PDF_IGNOVA_PAGE_SELECTION.dragSelection(
+        selection.baseSelection,
+        selection.pageIds,
+        selection.startIndex,
+        pageIndex,
+        selection.additive,
+      );
+      (Ta(page.id), ka(nextSelection));
+    },
+    applyOrganizerSelection = (documentItem, pageId, selectedIds) => {
+      if (documentItem.id === Q) (Ta(pageId), ka(new Set(selectedIds)));
+      else
+        setDualPageSelections((current) => ({
+          ...current,
+          [documentItem.id]: [...selectedIds],
+        }));
+    },
+    beginOrganizerSelection = (event, documentItem, page, pageIndex) => {
+      if (event.button !== 0 || event.target.closest(".dual-page-drag-handle")) return;
+      event.preventDefault();
+      let pageIds = documentItem.pages.map((item) => item.id),
+        currentSelection =
+          documentItem.id === Q
+            ? new Set(ue)
+            : new Set(dualPageSelections[documentItem.id] || []),
+        additive = event.ctrlKey || event.metaKey,
+        anchorIndex = dualSelectionAnchors.current[documentItem.id],
+        usesAnchor = event.shiftKey && Number.isInteger(anchorIndex),
+        startIndex = usesAnchor ? anchorIndex : pageIndex,
+        nextSelection = window.PDF_IGNOVA_PAGE_SELECTION.clickSelection(
+          currentSelection,
+          pageIds,
+          pageIndex,
+          { shift: event.shiftKey, additive, anchorIndex },
+        );
+      organizerSelectionDrag.current = {
+        documentId: documentItem.id,
+        pageIds,
+        startIndex,
+        baseSelection: additive ? currentSelection : new Set(),
+        additive,
+      };
+      applyOrganizerSelection(documentItem, page.id, nextSelection);
+      if (!usesAnchor)
+        dualSelectionAnchors.current[documentItem.id] = pageIndex;
+    },
+    extendOrganizerSelection = (event, documentItem, page, pageIndex) => {
+      let selection = organizerSelectionDrag.current;
+      if (
+        !selection ||
+        selection.documentId !== documentItem.id ||
+        !(event.buttons & 1)
+      )
+        return;
+      event.preventDefault();
+      let nextSelection = window.PDF_IGNOVA_PAGE_SELECTION.dragSelection(
+        selection.baseSelection,
+        selection.pageIds,
+        selection.startIndex,
+        pageIndex,
+        selection.additive,
+      );
+      applyOrganizerSelection(documentItem, page.id, nextSelection);
     },
     selectOrganizerPage = (event, documentItem, page, pageIndex) => {
       if (documentItem.id === Q) {
@@ -15463,44 +15575,68 @@ function cs() {
         if (n && he.id === $?.id) {
           let Y = await _.embedFont(L.Helvetica),
             ga = await _.embedFont(L.HelveticaBold),
-            Nl = Math.min(245, oe.width - 48),
-            Ju = 48,
+            signatureFont = await _.embedFont(L.TimesRomanItalic),
+            Nl = Math.max(180, Math.min(285, oe.width - 48)),
+            Ju = 76,
             ja = oe.width - Nl - 24,
-            al = 24;
+            al = 24,
+            sealColor = k(n.signatureColor || "#123f78"),
+            signedAt = new Date(n.signedAt || Date.now()),
+            dateLabel = signedAt.toLocaleString(
+              document.documentElement.lang || void 0,
+            ),
+            signatureLabel = (n.signatureText || n.name || "Firma").slice(0, 36);
           (ne.drawRectangle({
             x: ja,
             y: al,
             width: Nl,
             height: Ju,
             color: A(0.97, 0.99, 1),
-            borderColor: A(0.08, 0.33, 0.65),
+            borderColor: sealColor,
             borderWidth: 1,
           }),
             ne.drawText(
-              window.pdfIgnovaI18n?.t?.("FIRMADO DIGITALMENTE") ||
-                "FIRMADO DIGITALMENTE",
+              n.visualOnly
+                ? "FIRMA VISUAL"
+                : window.pdfIgnovaI18n?.t?.("FIRMADO DIGITALMENTE") ||
+                  "FIRMADO DIGITALMENTE",
               {
               x: ja + 10,
-              y: al + 29,
+              y: al + 61,
               size: 8,
               font: ga,
-              color: A(0.08, 0.33, 0.65),
+              color: sealColor,
               },
             ),
+            ne.drawText(signatureLabel, {
+              x: ja + 10,
+              y: al + 40,
+              size: 16,
+              font: signatureFont,
+              color: sealColor,
+            }),
             ne.drawText(n.name.slice(0, 42), {
               x: ja + 10,
-              y: al + 16,
-              size: 9,
+              y: al + 24,
+              size: 8,
               font: Y,
               color: A(0.08, 0.16, 0.28),
             }),
-            ne.drawText(new Date().toLocaleString(document.documentElement.lang || void 0), {
+            ne.drawText(`Fecha: ${dateLabel}`.slice(0, 58), {
               x: ja + 10,
-              y: al + 5,
+              y: al + 12,
               size: 6,
               font: Y,
               color: A(0.35, 0.4, 0.48),
-            }));
+            }),
+            n.reason &&
+              ne.drawText(`Motivo: ${n.reason}`.slice(0, 64), {
+                x: ja + 10,
+                y: al + 3,
+                size: 5,
+                font: Y,
+                color: A(0.35, 0.4, 0.48),
+              }));
         }
       }
       return _.save();
@@ -15622,30 +15758,89 @@ function cs() {
         Me("hand"),
         F("Documento cerrado"));
     },
-    yx = async () => {
-      if (!(!$ || !_u.trim() || !Vu)) {
-        if (!window.pdfEstudio) {
-          F(
-            "La firma digital solo est\xE1 disponible en el programa de escritorio",
-          );
-          return;
+    inspectSelectedCertificate = async (file = Vu, password = bs) => {
+      if (!file || !window.pdfEstudio?.inspectP12) return null;
+      setCertificateChecking(!0);
+      try {
+        let result = await window.pdfEstudio.inspectP12(
+          await file.arrayBuffer(),
+          password,
+        );
+        setCertificateStatus(result);
+        if (result?.ok) {
+          if (result.commonName && !_u.trim()) Xh(result.commonName);
+          if (result.commonName && !signatureText.trim())
+            setSignatureText(result.commonName);
         }
-        pa("Firmando PDF con certificado\u2026");
-        try {
-          let n = await Sn(ws ? { name: _u.trim() } : void 0),
-            s = await window.pdfEstudio.signPdf({
-              pdfBytes: n.buffer.slice(
-                n.byteOffset,
-                n.byteOffset + n.byteLength,
-              ),
-              certificateBytes: await Vu.arrayBuffer(),
-              password: bs,
-              name: _u.trim(),
-              reason: Ss,
-              location: vs,
-              contactInfo: Is,
-              pageIndex: Ue,
-            });
+        return result;
+      } catch (error) {
+        let result = {
+          ok: !1,
+          code: "INSPECTION_ERROR",
+          message: error?.message || "No se pudo comprobar el certificado.",
+        };
+        setCertificateStatus(result);
+        return result;
+      } finally {
+        setCertificateChecking(!1);
+      }
+    },
+    chooseCertificate = async (file) => {
+      (Yh(file || null), jh(""), setCertificateStatus(null));
+      if (file) await inspectSelectedCertificate(file, "");
+    },
+    yx = async () => {
+      if (!$ || !_u.trim()) return;
+      let visualOnly = signatureMode === "visual";
+      if (!visualOnly && !Vu) return;
+      if (!visualOnly && !window.pdfEstudio) {
+        F(
+          "La firma digital con certificado solo est\xE1 disponible en el programa de escritorio",
+        );
+        return;
+      }
+      pa(visualOnly ? "Insertando firma visual\u2026" : "Firmando PDF con certificado\u2026");
+      try {
+        if (!visualOnly) {
+          let certificate = await inspectSelectedCertificate(Vu, bs);
+          if (!certificate?.ok) throw new Error(certificate?.message || "Certificado no válido");
+          if (certificate.expired) throw new Error("El certificado está caducado.");
+          if (certificate.notYetValid)
+            throw new Error("El certificado todavía no es válido.");
+        }
+        let signedAt = new Date().toISOString(),
+          appearance = {
+            name: _u.trim(),
+            signatureText: signatureText.trim() || _u.trim(),
+            signatureColor,
+            reason: Ss,
+            signedAt,
+            visualOnly,
+          },
+          n = await Sn(visualOnly || ws ? appearance : void 0);
+        if (visualOnly) {
+          (rs(
+            n,
+            pn?.name.replace(/\.pdf$/i, "_firma_visual.pdf") ||
+              "documento_firma_visual.pdf",
+            "application/pdf",
+          ),
+            Rl(!1),
+            F("Firma visual con fecha insertada y PDF guardado"));
+        } else {
+          let s = await window.pdfEstudio.signPdf({
+            pdfBytes: n.buffer.slice(
+              n.byteOffset,
+              n.byteOffset + n.byteLength,
+            ),
+            certificateBytes: await Vu.arrayBuffer(),
+            password: bs,
+            name: _u.trim(),
+            reason: Ss,
+            location: vs,
+            contactInfo: Is,
+            pageIndex: Ue,
+          });
           (rs(
             s,
             pn?.name.replace(/\.pdf$/i, "_firmado.pdf") ||
@@ -15654,10 +15849,11 @@ function cs() {
           ),
             Rl(!1),
             F("PDF firmado digitalmente y guardado"));
-        } catch (n) {
-          (console.error(n),
-            F("No se pudo firmar. Revisa el certificado y la contrase\xF1a"));
         }
+      } catch (n) {
+        (console.error(n),
+          F(n?.message || "No se pudo firmar el PDF"));
+      } finally {
         pa("");
       }
     },
@@ -16426,7 +16622,7 @@ function cs() {
                   return (0, d.jsxs)(
                     "article",
                     {
-                      draggable: !0,
+                      draggable: !1,
                       className: `dual-page-card ${isActive ? "active" : ""} ${isSelected ? "selected" : ""}`,
                       title:
                         "Clic para seleccionar; Ctrl/⌘ añade páginas y Mayús selecciona un intervalo",
@@ -16471,13 +16667,29 @@ function cs() {
                           pageIndex,
                         );
                       },
-                      onClick: (event) =>
-                        selectOrganizerPage(
+                      onPointerDown: (event) =>
+                        beginOrganizerSelection(
                           event,
                           documentItem,
                           page,
                           pageIndex,
                         ),
+                      onPointerEnter: (event) =>
+                        extendOrganizerSelection(
+                          event,
+                          documentItem,
+                          page,
+                          pageIndex,
+                        ),
+                      onClick: (event) => {
+                        event.detail === 0 &&
+                          selectOrganizerPage(
+                            event,
+                            documentItem,
+                            page,
+                            pageIndex,
+                          );
+                      },
                       onDoubleClick: () => {
                         if (documentItem.id !== Q) {
                           lx(documentItem.id);
@@ -16501,6 +16713,12 @@ function cs() {
                         }),
                         (0, d.jsxs)("span", {
                           children: [
+                            (0, d.jsx)("i", {
+                              className: "dual-page-drag-handle",
+                              draggable: !0,
+                              title: "Arrastrar para mover las páginas seleccionadas",
+                              children: "⋮⋮",
+                            }),
                             (0, d.jsx)("b", { children: pageIndex + 1 }),
                             (0, d.jsx)("small", {
                               children: source?.name || documentItem.name,
@@ -16647,8 +16865,10 @@ function cs() {
         ref: l,
         type: "file",
         accept: ".p12,.pfx,application/x-pkcs12",
-        onChange: (n) => {
-          (Yh(n.target.files?.[0] || null), (n.target.value = ""));
+        onChange: async (n) => {
+          let file = n.target.files?.[0] || null;
+          await chooseCertificate(file);
+          n.target.value = "";
         },
       }),
       (0, d.jsxs)("header", {
@@ -17433,7 +17653,7 @@ function cs() {
                               return (0, d.jsxs)(
                                 "div",
                                 {
-                                  draggable: !0,
+                                  draggable: !1,
                                   "data-page-id": n.id,
                                   className: `thumb ${ue.has(n.id) ? "selected" : ""}`,
                                   onDragStart: () => {
@@ -17446,7 +17666,13 @@ function cs() {
                                   onDrop: (y) => {
                                     (y.stopPropagation(), fx(n.id));
                                   },
-                                  onClick: (y) => ox(y, n.id, s),
+                                  onPointerDown: (y) =>
+                                    beginPageSelection(y, n, s),
+                                  onPointerEnter: (y) =>
+                                    extendPageSelection(y, n, s),
+                                  onClick: (y) => {
+                                    y.detail === 0 && ox(y, n.id, s);
+                                  },
                                   onContextMenu: (y) => {
                                     (y.preventDefault(),
                                       ue.has(n.id) ||
@@ -17460,7 +17686,12 @@ function cs() {
                                       }));
                                   },
                                   children: [
-                                    (0, d.jsx)(uf, { size: 15 }),
+                                    (0, d.jsx)("span", {
+                                      className: "thumb-drag-handle",
+                                      draggable: !0,
+                                      title: "Arrastrar para mover las páginas seleccionadas",
+                                      children: (0, d.jsx)(uf, { size: 15 }),
+                                    }),
                                     (0, d.jsx)("div", {
                                       className: "thumbcanvas",
                                       children: (0, d.jsx)(qh, {
@@ -19042,34 +19273,108 @@ onContextMenu:gx,onPointerDown:ix,
                 className: "installmark",
                 children: (0, d.jsx)(Ma, { size: 28 }),
               }),
-              (0, d.jsx)("h2", { children: "Firma digital con certificado" }),
+              (0, d.jsx)("h2", { children: "Firmar PDF" }),
               (0, d.jsxs)("p", {
+                children:
+                  "Elige una firma criptográfica con certificado o crea una firma visual propia con fecha.",
+              }),
+              (0, d.jsxs)("div", {
+                className: "signature-mode-switch",
                 children: [
-                  "Firma criptogr\xE1ficamente el PDF con un certificado ",
-                  (0, d.jsx)("b", { children: ".P12" }),
-                  " o ",
-                  (0, d.jsx)("b", { children: ".PFX" }),
-                  ".",
+                  (0, d.jsx)("button", {
+                    className: signatureMode === "certificate" ? "active" : "",
+                    onClick: () => setSignatureMode("certificate"),
+                    children: "Certificado .P12/.PFX",
+                  }),
+                  (0, d.jsx)("button", {
+                    className: signatureMode === "visual" ? "active" : "",
+                    onClick: () => setSignatureMode("visual"),
+                    children: "Firma propia",
+                  }),
                 ],
               }),
-              (0, d.jsx)("label", { children: "Certificado digital" }),
-              (0, d.jsxs)("button", {
-                className: "certificate-button",
-                onClick: () => l.current?.click(),
-                children: [
-                  (0, d.jsx)(Ma, { size: 16 }),
-                  Vu ? Vu.name : "Seleccionar certificado .P12 o .PFX",
-                ],
-              }),
-              (0, d.jsx)("label", {
-                children: "Contrase\xF1a del certificado",
-              }),
-              (0, d.jsx)("input", {
-                type: "password",
-                value: bs,
-                onChange: (n) => jh(n.target.value),
-                placeholder: "Contrase\xF1a",
-              }),
+              signatureMode === "certificate" &&
+                (0, d.jsxs)(d.Fragment, {
+                  children: [
+                    (0, d.jsx)("label", { children: "Certificado digital" }),
+                    (0, d.jsxs)("button", {
+                      className: "certificate-button",
+                      onClick: () => l.current?.click(),
+                      children: [
+                        (0, d.jsx)(Ma, { size: 16 }),
+                        Vu ? Vu.name : "Seleccionar certificado .P12 o .PFX",
+                      ],
+                    }),
+                    (0, d.jsx)("label", {
+                      children: "Contraseña del certificado",
+                    }),
+                    (0, d.jsxs)("div", {
+                      className: "certificate-password-row",
+                      children: [
+                        (0, d.jsx)("input", {
+                          type: "password",
+                          value: bs,
+                          onChange: (n) => {
+                            (jh(n.target.value), setCertificateStatus(null));
+                          },
+                          placeholder: "Solo si el certificado está protegido",
+                        }),
+                        (0, d.jsx)("button", {
+                          onClick: () => inspectSelectedCertificate(),
+                          disabled: !Vu || certificateChecking,
+                          children: certificateChecking ? "Comprobando…" : "Comprobar",
+                        }),
+                      ],
+                    }),
+                    certificateStatus &&
+                      (0, d.jsxs)("div", {
+                        className: `certificate-status ${certificateStatus.ok ? "valid" : "invalid"}`,
+                        children: certificateStatus.ok
+                          ? [
+                              (0, d.jsx)("b", {
+                                children: certificateStatus.commonName || "Certificado válido",
+                              }),
+                              (0, d.jsx)("span", {
+                                children: certificateStatus.expired
+                                  ? "Certificado caducado"
+                                  : `Válido hasta ${new Date(certificateStatus.validTo).toLocaleDateString()}`,
+                              }),
+                            ]
+                          : certificateStatus.message,
+                      }),
+                  ],
+                }),
+              signatureMode === "visual" &&
+                (0, d.jsxs)(d.Fragment, {
+                  children: [
+                    (0, d.jsx)("label", { children: "Texto de la firma" }),
+                    (0, d.jsx)("input", {
+                      value: signatureText,
+                      onChange: (n) => setSignatureText(n.target.value),
+                      placeholder: "Escribe tu firma",
+                    }),
+                    (0, d.jsxs)("div", {
+                      className: "signature-visual-preview",
+                      style: { color: signatureColor },
+                      children: [
+                        (0, d.jsx)("span", {
+                          children: signatureText.trim() || _u.trim() || "Tu firma",
+                        }),
+                        (0, d.jsx)("input", {
+                          type: "color",
+                          value: signatureColor,
+                          onChange: (n) => setSignatureColor(n.target.value),
+                          title: "Color de la firma",
+                        }),
+                      ],
+                    }),
+                    (0, d.jsx)("small", {
+                      className: "signature-visual-warning",
+                      children:
+                        "La firma visual muestra nombre y fecha, pero no sustituye a una firma criptográfica con certificado.",
+                    }),
+                  ],
+                }),
               (0, d.jsx)("label", { children: "Nombre del firmante" }),
               (0, d.jsx)("input", {
                 value: _u,
@@ -19107,17 +19412,18 @@ onContextMenu:gx,onPointerDown:ix,
                   }),
                 ],
               }),
-              (0, d.jsxs)("label", {
-                className: "signature-check",
-                children: [
-                  (0, d.jsx)("input", {
-                    type: "checkbox",
-                    checked: ws,
-                    onChange: (n) => Jh(n.target.checked),
-                  }),
-                  "A\xF1adir sello visible en la p\xE1gina activa",
-                ],
-              }),
+              signatureMode === "certificate" &&
+                (0, d.jsxs)("label", {
+                  className: "signature-check",
+                  children: [
+                    (0, d.jsx)("input", {
+                      type: "checkbox",
+                      checked: ws,
+                      onChange: (n) => Jh(n.target.checked),
+                    }),
+                    "Añadir firma visible con nombre y fecha en la página activa",
+                  ],
+                }),
               (0, d.jsxs)("div", {
                 className: "modalactions",
                 children: [
@@ -19129,17 +19435,23 @@ onContextMenu:gx,onPointerDown:ix,
                   (0, d.jsxs)("button", {
                     className: "blue",
                     onClick: yx,
-                    disabled: !Vu || !_u.trim(),
+                    disabled:
+                      !_u.trim() ||
+                      (signatureMode === "certificate" && (!Vu || certificateChecking)),
                     children: [
                       (0, d.jsx)(Ma, { size: 16 }),
-                      "Firmar y descargar PDF",
+                      signatureMode === "certificate"
+                        ? "Firmar y descargar PDF"
+                        : "Insertar firma y descargar",
                     ],
                   }),
                 ],
               }),
               (0, d.jsx)("small", {
                 children:
-                  "El certificado y su contrase\xF1a se usan \xFAnicamente en este equipo y no se env\xEDan a Internet.",
+                  signatureMode === "certificate"
+                    ? "El certificado y su contraseña se usan únicamente en este equipo y no se envían a Internet."
+                    : "La fecha se incorpora automáticamente al sello de la página activa.",
               }),
             ],
           }),

@@ -12,6 +12,7 @@ const {
 const { getMessages, normalizeLanguage } = require("./native-i18n.cjs");
 const { fitPdfToPaper, normalizePaperSize } = require("./print-paper.cjs");
 const { rewriteNativeText } = require("./native-text-rewrite.cjs");
+const { inspectP12Buffer } = require("./p12-utils.cjs");
 
 ipcMain.handle("rewrite-native-text", async (_event, bytes, pageIndex, edit) => {
   const normalized = value => String(value || "").replace(/^[A-Z]{6}\+/, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
@@ -944,6 +945,10 @@ ipcMain.handle("sign-pdf", async (_event, payload) => {
 
   const pdfBytes = Buffer.from(new Uint8Array(payload.pdfBytes));
   const certificateBytes = Buffer.from(new Uint8Array(payload.certificateBytes));
+  const certificateInfo = inspectP12Buffer(certificateBytes, payload.password || "");
+  if (!certificateInfo.ok) throw new Error(certificateInfo.message);
+  if (certificateInfo.expired) throw new Error("El certificado está caducado.");
+  if (certificateInfo.notYetValid) throw new Error("El certificado todavía no es válido.");
   const pdfDocument = await PDFDocument.load(pdfBytes);
   const pageIndex = Math.max(0, Math.min(pdfDocument.getPageCount() - 1, payload.pageIndex || 0));
 
@@ -961,6 +966,11 @@ ipcMain.handle("sign-pdf", async (_event, payload) => {
   const signer = new P12Signer(certificateBytes, { passphrase: payload.password || "" });
   const signed = await new SignPdf().sign(Buffer.from(prepared), signer);
   return signed.buffer.slice(signed.byteOffset, signed.byteOffset + signed.byteLength);
+});
+
+ipcMain.handle("inspect-p12", async (_event, certificateArrayBuffer, password) => {
+  const certificateBytes = Buffer.from(new Uint8Array(certificateArrayBuffer));
+  return inspectP12Buffer(certificateBytes, password || "");
 });
 
 function createWindow() {
