@@ -14076,7 +14076,7 @@ function cs() {
       async (n, s) => {
         let L = Array.from(n).filter(
           (y) =>
-            y.bytes ||
+            (y.bytes && typeof y.bytes !== "function") ||
             y.type === "application/pdf" ||
             y.name.toLowerCase().endsWith(".pdf"),
         );
@@ -14090,7 +14090,7 @@ function cs() {
             A = [],
             k = [];
           for (let _ of L) {
-            let pe = _.bytes
+            let pe = _.bytes && typeof _.bytes !== "function"
                 ? new Uint8Array(_.bytes)
                 : new Uint8Array(await _.arrayBuffer()),
               xe = Da(),

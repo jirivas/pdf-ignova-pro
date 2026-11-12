@@ -41,6 +41,7 @@ assert.match(editor, /thumbnailPanel/);
 assert.match(editor, /data-page-id/);
 assert.match(editor, /scrollIntoView\(\{ block: "nearest", inline: "nearest" \}\)/);
 assert.match(editor, /u\.current\.scrollTop = 0/);
+assert.match(editor, /typeof _\.bytes !== "function"/);
 assert.match(uiCss, /\.thumbs\s*\{[^}]*overflow-y:\s*scroll/s);
 
 assert.match(i18nExtra, /\["Modificar texto", "Modify text"/);
