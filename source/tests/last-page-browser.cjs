@@ -54,6 +54,14 @@ function createStaticServer() {
       if (message.type() === "error") console.log("BROWSER", message.text());
     });
 
+    await page.addInitScript(() => {
+      const originalError = console.error.bind(console);
+      console.error = (...values) => originalError(
+        ...values.map(value => value instanceof Error
+          ? { name: value.name, message: value.message, stack: value.stack, code: value.code }
+          : value),
+      );
+    });
     await page.goto("http://127.0.0.1:37070/app/editor.html");
     let fixture = process.env.IGNOVA_LAST_PAGE_FIXTURE;
     if (!fixture) {
