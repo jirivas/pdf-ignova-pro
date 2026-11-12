@@ -1,0 +1,10 @@
+PDF IGNOVA PRO 1.9.19 — VISUALIZACIÓN DE LA ÚLTIMA PÁGINA
+
+- Se corrige la visualización de la última página en documentos que mezclan
+  tamaños de hoja, como quince páginas A4 seguidas de una página A3.
+- La miniatura de la página seleccionada entra automáticamente en la zona
+  visible del panel lateral.
+- Al cambiar de página, el visor comienza desde la esquina superior izquierda
+  y no hereda el desplazamiento de la página anterior.
+- Se amplía el espacio de desplazamiento al final del panel de miniaturas para
+  que la última página quede completamente visible y seleccionable.

@@ -13587,6 +13587,7 @@ function cs() {
     nativeEditSession = (0, I.useRef)(null),
     screenSelectionDrag = (0, I.useRef)(null),
     zoomWheelAnchor = (0, I.useRef)(null),
+    thumbnailPanel = (0, I.useRef)(null),
     dualSelectionAnchors = (0, I.useRef)({}),
     searchRequest = (0, I.useRef)(0),
     saveDialogInProgress = (0, I.useRef)(!1),
@@ -13703,6 +13704,20 @@ function cs() {
     let pageIndex = Math.max(0, w.findIndex((page) => page.id === $t));
     setPageNumberDraft(w.length ? String(pageIndex + 1) : "0");
   }, [$t, w.length]);
+  (0, I.useLayoutEffect)(() => {
+    if (!$t) return;
+    let panel = thumbnailPanel.current,
+      selectedThumbnail = panel?.querySelector(
+        `.thumb[data-page-id="${CSS.escape($t)}"]`,
+      );
+    selectedThumbnail?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    // A large last sheet must open from its own origin instead of inheriting
+    // the scroll position of the preceding A4 page.
+    if (u.current) {
+      u.current.scrollTop = 0;
+      u.current.scrollLeft = 0;
+    }
+  }, [$t]);
   (0, I.useLayoutEffect)(() => {
     let anchor = zoomWheelAnchor.current;
     if (!anchor || anchor.zoom === Cf) return;
@@ -17393,6 +17408,7 @@ function cs() {
                             ],
                           }),
                         (0, d.jsxs)("div", {
+                          ref: thumbnailPanel,
                           className: "thumbs",
                           children: [
                             !w.length &&
@@ -17412,6 +17428,7 @@ function cs() {
                                 "div",
                                 {
                                   draggable: !0,
+                                  "data-page-id": n.id,
                                   className: `thumb ${ue.has(n.id) ? "selected" : ""}`,
                                   onDragStart: () => {
                                     (Lf(n.id),
