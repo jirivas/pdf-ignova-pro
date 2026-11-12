@@ -50,6 +50,9 @@ function createStaticServer() {
     });
     const errors = [];
     page.on("pageerror", error => errors.push(error.message));
+    page.on("console", message => {
+      if (message.type() === "error") console.log("BROWSER", message.text());
+    });
 
     await page.goto("http://127.0.0.1:37070/app/editor.html");
     let fixture = process.env.IGNOVA_LAST_PAGE_FIXTURE;
@@ -82,11 +85,20 @@ function createStaticServer() {
       };
     }
     await page.locator("input[type=file]").first().setInputFiles(fixture);
-    await page.waitForFunction(
-      () => document.querySelectorAll(".thumb").length === 16,
-      undefined,
-      { timeout: 120_000 },
-    );
+    for (let attempt = 0; attempt < 24; attempt += 1) {
+      const count = await page.locator(".thumb").count();
+      if (count === 16) break;
+      if (attempt % 2 === 0) {
+        const state = await page.evaluate(() => ({
+          thumbnails: document.querySelectorAll(".thumb").length,
+          summary: document.querySelector(".summary")?.textContent || "",
+          status: document.querySelector(".status")?.textContent || "",
+          notice: document.querySelector(".toast,.notice")?.textContent || "",
+        }));
+        console.log("WAITING FOR THUMBNAILS", JSON.stringify(state));
+      }
+      await page.waitForTimeout(5_000);
+    }
     assert.equal(await page.locator(".thumb").count(), 16, "all thumbnails must load");
 
     const pageNumber = page.locator('.status input[type="number"]');
