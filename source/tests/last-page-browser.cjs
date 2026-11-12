@@ -3,33 +3,9 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const http = require("node:http");
-const os = require("node:os");
 const path = require("node:path");
-const { PDFDocument, StandardFonts, rgb } = require("pdf-lib");
 
 const root = path.resolve(__dirname, "..");
-
-async function createFixture() {
-  const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "ignova-last-page-"));
-  const fixture = path.join(tempDirectory, "15-a4-plus-1-a3.pdf");
-  const document = await PDFDocument.create();
-  const font = await document.embedFont(StandardFonts.Helvetica);
-
-  for (let pageNumber = 1; pageNumber <= 16; pageNumber += 1) {
-    const isLastPage = pageNumber === 16;
-    const page = document.addPage(isLastPage ? [841.89, 1190.55] : [595.28, 841.89]);
-    page.drawText(`Pagina ${pageNumber}${isLastPage ? " - A3" : " - A4"}`, {
-      x: 48,
-      y: page.getHeight() - 72,
-      size: 24,
-      font,
-      color: rgb(0.12, 0.12, 0.12),
-    });
-  }
-
-  fs.writeFileSync(fixture, await document.save());
-  return { fixture, tempDirectory };
-}
 
 function createStaticServer() {
   return http.createServer((request, response) => {
@@ -56,8 +32,6 @@ function createStaticServer() {
 }
 
 (async () => {
-  const generated = process.env.IGNOVA_LAST_PAGE_FIXTURE ? null : await createFixture();
-  const fixture = process.env.IGNOVA_LAST_PAGE_FIXTURE || generated.fixture;
   const { chromium } = await import(process.env.IGNOVA_PLAYWRIGHT || "playwright");
   const server = createStaticServer();
   let browser;
@@ -78,6 +52,35 @@ function createStaticServer() {
     page.on("pageerror", error => errors.push(error.message));
 
     await page.goto("http://127.0.0.1:37070/app/editor.html");
+    let fixture = process.env.IGNOVA_LAST_PAGE_FIXTURE;
+    if (!fixture) {
+      const bytes = await page.evaluate(async () => {
+        const { PDFDocument, StandardFonts, rgb } = await import(
+          "./editor-assets/chunks/es-4HSNR7QU.js"
+        );
+        const document = await PDFDocument.create();
+        const font = await document.embedFont(StandardFonts.Helvetica);
+        for (let pageNumber = 1; pageNumber <= 16; pageNumber += 1) {
+          const isLastPage = pageNumber === 16;
+          const pdfPage = document.addPage(
+            isLastPage ? [841.89, 1190.55] : [595.28, 841.89],
+          );
+          pdfPage.drawText(`Pagina ${pageNumber}${isLastPage ? " - A3" : " - A4"}`, {
+            x: 48,
+            y: pdfPage.getHeight() - 72,
+            size: 24,
+            font,
+            color: rgb(0.12, 0.12, 0.12),
+          });
+        }
+        return Array.from(await document.save());
+      });
+      fixture = {
+        name: "15-a4-plus-1-a3.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from(bytes),
+      };
+    }
     await page.locator("input[type=file]").first().setInputFiles(fixture);
     await page.waitForFunction(() => document.querySelectorAll(".thumb").length === 16);
     assert.equal(await page.locator(".thumb").count(), 16, "all thumbnails must load");
@@ -107,7 +110,6 @@ function createStaticServer() {
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));
-    if (generated) fs.rmSync(generated.tempDirectory, { recursive: true, force: true });
   }
 })().catch(error => {
   console.error(error);
