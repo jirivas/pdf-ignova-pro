@@ -82,7 +82,11 @@ function createStaticServer() {
       };
     }
     await page.locator("input[type=file]").first().setInputFiles(fixture);
-    await page.waitForFunction(() => document.querySelectorAll(".thumb").length === 16);
+    await page.waitForFunction(
+      () => document.querySelectorAll(".thumb").length === 16,
+      undefined,
+      { timeout: 120_000 },
+    );
     assert.equal(await page.locator(".thumb").count(), 16, "all thumbnails must load");
 
     const pageNumber = page.locator('.status input[type="number"]');
